@@ -1,0 +1,237 @@
+{
+    "shipDeploymentRoles": {
+      "firstMate": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "",
+            "description": "When the ship fails a Strength, Dexterity, or Constitution saving throw, as a reaction, you can expend a command die to attempt to recover. Roll the die and add the result to the saving throw."
+          },
+          {
+            "rank": 2,
+            "name": "Targeted Broadside",
+            "description": "As an action, you can make a DC 15 Dexterity (Water Vehicles) check to position your ship for maximum firing advantage. On a success, all ranged weapon attacks made by your ship against a single enemy vessel gain advantage until the beginning of your next turn. This precise maneuver requires expert timing, limiting the ship’s movement to half its speed during the current round. You may use this feature a number of times equal to your proficiency bonus, regaining all expended uses after a long rest."
+          },
+          {
+            "rank": 3,
+            "name": "Ramming Speed",
+            "description": "When you take the Ram action, you can expend a command die to increase the damage. On a failed save, the target ship takes additional bludgeoning damage equal to the amount rolled on the die + your ship’s Strength modifier. Your ship is unaffected by the additional damage dealt by this tactic."
+          },
+          {
+            "rank": 4,
+            "name": "Evasive Maneuvers",
+            "description": "Your instinctive control of the helm lets you dodge out of the way of certain area effects. When your ship is subjected to an effect that allows your ship to make a Dexterity saving throw to take only half damage, it instead takes no damage if it succeeds on a saving throw, and only half damage if it fails."
+          },
+          {
+            "rank": 5,
+            "name": "Expert Helmsman",
+            "description": "When you would expend a command die, you can use a d4 instead of expending the die. You can only use this feature once per round."
+          }
+        ]
+      },
+      "commsOfficer": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "All Hands on Deck!",
+            "description": "If you are surprised at the start of combat and are not incapacitated, you can make a DC15 Charisma saving throw to mitigate enemy surprise. If you are not surprised, you can expend a command die and add the number rolled to the initiative of your ship."
+          },
+          {
+            "rank": 2,
+            "name": "Look Alive!",
+            "description": "On your turn, you can use your action and expend one command die to bolster the resolve of the crew of your or another allied ship. That ship gains temporary hit points equal to the command die roll + your Charisma modifier."
+          },
+          {
+            "rank": 3,
+            "name": "Brace for Impact!",
+            "description": "When a friendly ship, including your own, who can see or hear you makes a saving throw, you can use your reaction and expend a command die, adding the number rolled to the result of the saving throw. You can use this collaboration before or after making the saving throw, but before any effects of the saving throw are determined."
+          },
+          {
+            "rank": 4,
+            "name": "Have at Ye!",
+            "description": "As an action, you can expend one command die to bolster the resolve of a crew on your or another allied ship who can see or hear you. The targeted ship can add your Charisma modifier to a number of damage rolls they make until the start of your next turn equal to the number rolled on the die."
+          },
+          {
+            "rank": 5,
+            "name": "Cover Us!",
+            "description": "When a ship makes an attack roll against your ship, you can use your reaction and expend a command die and command another willing ally ship within 300 feet of the enemy ship to intercede. A crewmember on that allied ship manning a weapon station must use their reaction to do so. The enemy ship is then forced to make an attack on the ally ship instead. If the attack misses, the crewmember can immediately make a weapon attack against the enemy ship as a part of that same reaction. Roll the command die, and add the result to the ally’s attack roll."
+          }
+        ]
+      },
+      "boatswain": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "Reinforced Repair",
+            "description": "As a bonus action, you can expend one command die to use a hull die and recover Hull Points. You gain additional Hull Points equal to the amount rolled on the command die."
+          },
+          {
+            "rank": 2,
+            "name": "Rapid Repairman",
+            "description": "When you take the Patch action, you may choose to do so with disadvantage. If you succeed on the check, you can expend 2 Hull Dice, instead of one. For each Hull Die spent in this way, roll the die and add the ship’s Constitution modifier to it."
+          },
+          {
+            "rank": 3,
+            "name": "Dependable Damage Control",
+            "description": "When your ship would make a Constitution Saving throw, you can take take the maximum instead of rolling. You can use this feature before or after making the roll, but before any effects of the roll are determined. You may use this feature once before completing a short or long rest."
+          },
+          {
+            "rank": 4,
+            "name": "Critical Fix",
+            "description": "When you take the Patch action, when you would roll to restore hull points, you can take the maximum instead of rolling. You can use this feature before or after making the roll. Once you’ve used this feature, you must complete a short or long rest before you can use it again."
+          },
+          {
+            "rank": 5,
+            "name": "Last Line of Defense",
+            "description": "As a reaction, when your ship would otherwise be reduced to zero hull points, you can instead reduce your hull points to one. Once you’ve used this feature, you must finish a long rest before you can use it again."
+          }
+        ]
+      },
+      "masterGunner": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "Munitions Expert",
+            "description": "As a bonus action, you may choose one of the following forms of cannon ammunition to add an additional effect to your next attack: Chain Shot, Smoke Shells, Inferno Shells, Armor Piercing Rounds"
+          },
+          {
+            "rank": 2,
+            "name": "Quick Reload",
+            "description": "As a bonus action, you can expend one command die to immediately reload a number of ship weapons equal to the amount rolled on the command die. You may use this feature a number of times equal to your ranks in Master Gunner. You regain all expended uses when you complete a long rest."
+          },
+          {
+            "rank": 3,
+            "name": "",
+            "description": "When you roll for damage with a ship weapon, you can reroll one of the dice, but you must use the new result. You may use this feature a number of times equal to your ranks in Master Gunner. You regain all expended uses when you complete a long rest."
+          },
+          {
+            "rank": 4,
+            "name": "Deadeye Gunner",
+            "description": "Ships weapons score a critical hit on a roll of 19 or 20. Additionally, you can roll the weapon damage dice one additional time when determining the extra damage for a critical hit with a ship weapon."
+          },
+          {
+            "rank": 5,
+            "name": "Master Artillerist",
+            "description": "When you hit a target with a ship attack, you can deal maximum damage with that attack. Once you’ve used this feature, you can’t use it again until you finish a short or long rest."
+          }
+        ]
+      },
+      "lookout": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "Scan the Horizon",
+            "description": "While positioned in one of the ship's crow's nests and making a Wisdom (Perception) check to identify a ship or creature, you may do so with advantage."
+          },
+          {
+            "rank": 2,
+            "name": "Find Vulnerability",
+            "description": "As a bonus action, you can make an Intelligence (Investigation) check to identify a target's weak spot. Until your next turn, your ship has advantage on all weapon attacks against the target. You may use this feature a number of times equal to your ranks in Lookout. You regain all expended uses when you complete a long rest."
+          },
+          {
+            "rank": 3,
+            "name": "Threat Assessment",
+            "description": "As a bonus action, you can learn certain information about the capabilities of your target. The DM tells you if the ship is your ship’s equal, superior, or inferior in regard to two of the following characteristics of your choice: An ability score, armor class, current total hull points, number of crew, or speed (water)"
+          },
+          {
+            "rank": 4,
+            "name": "Weather Awareness",
+            "description": "please help me come up with a better name for weather awareness for the lookout"
+          },
+          {
+            "rank": 5,
+            "name": "Unerring Observation",
+            "description": "Placeholder description for Unerring Observation."
+          }
+        ]
+      },
+      "quarterMaster": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "",
+            "description": "Placeholder description for Crippling Shot."
+          },
+          {
+            "rank": 2,
+            "name": "",
+            "description": "Placeholder description for Rapid Reload."
+          },
+          {
+            "rank": 3,
+            "name": "",
+            "description": "Placeholder description for Deadly Aim."
+          },
+          {
+            "rank": 4,
+            "name": "",
+            "description": "Placeholder description for Explosive Impact."
+          },
+          {
+            "rank": 5,
+            "name": "",
+            "description": "Placeholder description for Master Artillerist."
+          }
+        ]
+      },
+      "captain": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "Command Authority",
+            "description": "Placeholder description for Command Authority."
+          },
+          {
+            "rank": 2,
+            "name": "Tactical Maneuver",
+            "description": "Placeholder description for Tactical Maneuver."
+          },
+          {
+            "rank": 3,
+            "name": "Inspire Crew",
+            "description": "Placeholder description for Inspire Crew."
+          },
+          {
+            "rank": 4,
+            "name": "Fearless Leadership",
+            "description": "Placeholder description for Fearless Leadership."
+          },
+          {
+            "rank": 5,
+            "name": "Ultimate Command",
+            "description": "Placeholder description for Ultimate Command."
+          }
+        ]
+      },
+      "personnelOfficer": {
+        "feats": [
+          {
+            "rank": 1,
+            "name": "Efficient Recruitment",
+            "description": "Placeholder description for Efficient Recruitment."
+          },
+          {
+            "rank": 2,
+            "name": "Crew Morale Boost",
+            "description": "Placeholder description for Crew Morale Boost."
+          },
+          {
+            "rank": 3,
+            "name": "Conflict Resolution",
+            "description": "Placeholder description for Conflict Resolution."
+          },
+          {
+            "rank": 4,
+            "name": "Advanced Training",
+            "description": "Placeholder description for Advanced Training."
+          },
+          {
+            "rank": 5,
+            "name": "Master Strategist",
+            "description": "Placeholder description for Master Strategist."
+          }
+        ]
+      }
+    }
+  }
+  

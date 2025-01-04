@@ -194,48 +194,55 @@ const ShipStats = () => {
         <h3>
           Crew Morale Score:
         </h3>
-        <p className="centered-in-card">
+        <div className="centered-in-card">
           <div className={`morale-display ${getMoraleClass(shipData.soulsOnboard.crewMorale || 0)}`}>
             {getCrewMorale()}
           </div>
           <LineGraphWithGradient morale={shipData.soulsOnboard.crewMorale || 0} />
-        </p>
+        </div>
       </div>
     );
   };
 
   const fetchCharacterStats = async (characterId) => {
     try {
-      const response = await fetch(
-        `http://localhost:4000/proxy/https://character-service.dndbeyond.com/character/v5/character/${characterId}`
-      );
+      // Determine the base URL dynamically based on the environment
+      const apiBaseUrl =
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:4000/proxy"
+          : "/api/proxy";
+
+      // Construct the full URL for the API call
+      const apiUrl = `${apiBaseUrl}/https://character-service.dndbeyond.com/character/v5/character/${characterId}`;
+
+      const response = await fetch(apiUrl);
       const characterData = await response.json();
 
       // Log the full response for debugging
-      // console.log('Character Data:', characterData);
+      // console.log("Character Data:", characterData);
 
       if (!characterData.data || !characterData.data.stats) {
-        throw new Error('Stats data is missing in the API response.');
+        throw new Error("Stats data is missing in the API response.");
       }
 
       // Extract character name
-      const characterName = characterData.data.name || 'Unknown Character';
+      const characterName = characterData.data.name || "Unknown Character";
 
       // Extract base stats
       const baseStats = characterData.data.stats.reduce((acc, stat) => {
         acc[stat.id] = stat.value;
         return acc;
       }, {});
-      // console.log('Base Stats:', baseStats);
+      // console.log("Base Stats:", baseStats);
 
       // Map subType strings to stat IDs
       const subTypeToStatId = {
-        'strength-score': 1,
-        'dexterity-score': 2,
-        'constitution-score': 3,
-        'intelligence-score': 4,
-        'wisdom-score': 5,
-        'charisma-score': 6,
+        "strength-score": 1,
+        "dexterity-score": 2,
+        "constitution-score": 3,
+        "intelligence-score": 4,
+        "wisdom-score": 5,
+        "charisma-score": 6,
       };
 
       // Extract all modifiers
@@ -247,13 +254,13 @@ const ShipStats = () => {
         ...(characterData.data.modifiers.item || []),
         ...(characterData.data.modifiers.condition || []),
       ];
-      // console.log('All Modifiers:', allModifiers);
+      // console.log("All Modifiers:", allModifiers);
 
       // Filter and process ability score modifiers
       const filteredModifiers = allModifiers.filter(
-        (mod) => mod.type === 'bonus' && subTypeToStatId[mod.subType]
+        (mod) => mod.type === "bonus" && subTypeToStatId[mod.subType]
       );
-      // console.log('Filtered Modifiers:', filteredModifiers);
+      // console.log("Filtered Modifiers:", filteredModifiers);
 
       // Calculate bonuses for each stat
       const statBonuses = {};
@@ -265,17 +272,18 @@ const ShipStats = () => {
         // Log detailed modifier info for debugging
         // console.log(`Modifier Applied: StatID ${statId}, Value ${mod.value}, Source: ${mod.componentId}`);
       });
-      // console.log('Stat Bonuses:', statBonuses);
+      // console.log("Stat Bonuses:", statBonuses);
 
       // Combine base stats and bonuses
       const finalStats = {};
       for (let statId in baseStats) {
-        finalStats[statId] = (baseStats[statId] || 0) + (statBonuses[statId] || 0);
+        finalStats[statId] =
+          (baseStats[statId] || 0) + (statBonuses[statId] || 0);
 
         // Log the calculation step for debugging
         // console.log(`Final Stat Calculation: StatID ${statId}, Base ${baseStats[statId]}, Bonus ${statBonuses[statId] || 0}`);
       }
-      // console.log('Final Stats:', finalStats);
+      // console.log("Final Stats:", finalStats);
 
       return {
         name: characterName,
@@ -289,10 +297,11 @@ const ShipStats = () => {
         },
       };
     } catch (error) {
-      console.error('Error fetching character stats:', error);
+      console.error("Error fetching character stats:", error);
       return null;
     }
   };
+
 
   // Progress wheel dynamic color
   const getProgressColor = (currentHP, maxHP) => {

@@ -206,87 +206,93 @@ const ShipStats = () => {
 
   const fetchCharacterStats = async (characterId) => {
     try {
-        // Determine URL dynamically
-        const baseUrl =
-            process.env.NODE_ENV === "development"
-                ? `http://localhost:4000/proxy/https://character-service.dndbeyond.com/character/v5/character/${characterId}`
-                : `/api/proxy?url=https://character-service.dndbeyond.com/character/v5/character/${characterId}`;
+      const response = await fetch(
+        `http://localhost:4000/proxy/https://character-service.dndbeyond.com/character/v5/character/${characterId}`
+      );
+      const characterData = await response.json();
 
-        // Fetch data
-        const response = await fetch(baseUrl, {
-            method: "GET",
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                Accept: "application/json",
-            },
-        });
+      // Log the full response for debugging
+      // console.log('Character Data:', characterData);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+      if (!characterData.data || !characterData.data.stats) {
+        throw new Error('Stats data is missing in the API response.');
+      }
 
-        const characterData = await response.json();
+      // Extract character name
+      const characterName = characterData.data.name || 'Unknown Character';
 
-        if (!characterData.data || !characterData.data.stats) {
-            throw new Error("Stats data is missing in the API response.");
-        }
+      // Extract base stats
+      const baseStats = characterData.data.stats.reduce((acc, stat) => {
+        acc[stat.id] = stat.value;
+        return acc;
+      }, {});
+      // console.log('Base Stats:', baseStats);
 
-        // Process the character data (as in the earlier code)
-        const characterName = characterData.data.name || "Unknown Character";
-        const baseStats = characterData.data.stats.reduce((acc, stat) => {
-            acc[stat.id] = stat.value;
-            return acc;
-        }, {});
-        const subTypeToStatId = {
-            "strength-score": 1,
-            "dexterity-score": 2,
-            "constitution-score": 3,
-            "intelligence-score": 4,
-            "wisdom-score": 5,
-            "charisma-score": 6,
-        };
-        const allModifiers = [
-            ...(characterData.data.modifiers.race || []),
-            ...(characterData.data.modifiers.class || []),
-            ...(characterData.data.modifiers.background || []),
-            ...(characterData.data.modifiers.feat || []),
-            ...(characterData.data.modifiers.item || []),
-            ...(characterData.data.modifiers.condition || []),
-        ];
-        const filteredModifiers = allModifiers.filter(
-            (mod) => mod.type === "bonus" && subTypeToStatId[mod.subType]
-        );
-        const statBonuses = {};
-        filteredModifiers.forEach((mod) => {
-            const statId = subTypeToStatId[mod.subType];
-            if (!statBonuses[statId]) statBonuses[statId] = 0;
-            statBonuses[statId] += mod.value || 0;
-        });
-        const finalStats = {};
-        for (let statId in baseStats) {
-            finalStats[statId] =
-                (baseStats[statId] || 0) + (statBonuses[statId] || 0);
-        }
+      // Map subType strings to stat IDs
+      const subTypeToStatId = {
+        'strength-score': 1,
+        'dexterity-score': 2,
+        'constitution-score': 3,
+        'intelligence-score': 4,
+        'wisdom-score': 5,
+        'charisma-score': 6,
+      };
 
-        return {
-            name: characterName,
-            stats: {
-                STR: finalStats[1] || 0,
-                DEX: finalStats[2] || 0,
-                CON: finalStats[3] || 0,
-                INT: finalStats[4] || 0,
-                WIS: finalStats[5] || 0,
-                CHA: finalStats[6] || 0,
-            },
-        };
+      // Extract all modifiers
+      const allModifiers = [
+        ...(characterData.data.modifiers.race || []),
+        ...(characterData.data.modifiers.class || []),
+        ...(characterData.data.modifiers.background || []),
+        ...(characterData.data.modifiers.feat || []),
+        ...(characterData.data.modifiers.item || []),
+        ...(characterData.data.modifiers.condition || []),
+      ];
+      // console.log('All Modifiers:', allModifiers);
+
+      // Filter and process ability score modifiers
+      const filteredModifiers = allModifiers.filter(
+        (mod) => mod.type === 'bonus' && subTypeToStatId[mod.subType]
+      );
+      // console.log('Filtered Modifiers:', filteredModifiers);
+
+      // Calculate bonuses for each stat
+      const statBonuses = {};
+      filteredModifiers.forEach((mod) => {
+        const statId = subTypeToStatId[mod.subType];
+        if (!statBonuses[statId]) statBonuses[statId] = 0;
+        statBonuses[statId] += mod.value || 0;
+
+        // Log detailed modifier info for debugging
+        // console.log(`Modifier Applied: StatID ${statId}, Value ${mod.value}, Source: ${mod.componentId}`);
+      });
+      // console.log('Stat Bonuses:', statBonuses);
+
+      // Combine base stats and bonuses
+      const finalStats = {};
+      for (let statId in baseStats) {
+        finalStats[statId] = (baseStats[statId] || 0) + (statBonuses[statId] || 0);
+
+        // Log the calculation step for debugging
+        // console.log(`Final Stat Calculation: StatID ${statId}, Base ${baseStats[statId]}, Bonus ${statBonuses[statId] || 0}`);
+      }
+      // console.log('Final Stats:', finalStats);
+
+      return {
+        name: characterName,
+        stats: {
+          STR: finalStats[1] || 0,
+          DEX: finalStats[2] || 0,
+          CON: finalStats[3] || 0,
+          INT: finalStats[4] || 0,
+          WIS: finalStats[5] || 0,
+          CHA: finalStats[6] || 0,
+        },
+      };
     } catch (error) {
-        console.error("Error fetching character stats:", error);
-        return null;
+      console.error('Error fetching character stats:', error);
+      return null;
     }
-};
-
-
-
+  };
 
   // Progress wheel dynamic color
   const getProgressColor = (currentHP, maxHP) => {

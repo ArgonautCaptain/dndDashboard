@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import Dashboard from './components/dashboard';
+import Map from './components/map';
 import AdminPanel from './components/adminpanel';
-import ShipStats from './components/shipstats';
+import ShipDashboard from './components/shipdashboard';
 import './App.css'; // Ensure styles for the header are included
 
 const App = () => (
@@ -12,13 +12,13 @@ const App = () => (
       <nav className="nav">
         <ul className="nav-list">
           <li className="nav-item">
-            <Link to="/">Dashboard</Link>
+            <Link to="/">Ship Dashboard</Link>
           </li>
           <li className="nav-item">
-            <Link to="/stats">Ship Stats</Link>
+            <Link to="/map">Map</Link>
           </li>
           <li className="nav-item">
-            <Link to="/admin">Admin Panel</Link>
+            <Link to="/admin">DM Panel</Link>
           </li>
         </ul>
       </nav>
@@ -27,9 +27,9 @@ const App = () => (
     {/* Page Content */}
     <main className="content">
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<ShipDashboard />} />
+        <Route path="/map" element={<Map />} />
         <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/stats" element={<ShipStats />} />
       </Routes>
     </main>
   </>

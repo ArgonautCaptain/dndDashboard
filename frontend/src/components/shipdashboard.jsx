@@ -3,7 +3,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
 import { Box } from '@mui/material';
-import deploymentFeatures from './../data/deploymentFeatures.json'
+import deploymentFeatures from '../data/deploymentFeatures.json'
 
 
 const ShipStats = () => {

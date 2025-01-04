@@ -49,7 +49,7 @@ const AdminPanel = () => {
     <div className="container">
       {!isAuthenticated ? (
         <form onSubmit={handleLogin}>
-          <h2>Admin Login</h2>
+          <h2>DM Login</h2>
           <input
             type="password"
             placeholder="Enter password"
@@ -60,7 +60,7 @@ const AdminPanel = () => {
         </form>
       ) : (
         <>
-          <h2>Admin Panel</h2>
+          <h2>DM Panel</h2>
           <button onClick={handleLogout}>Logout</button>
           <button onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>Firebase</button>
           <label>

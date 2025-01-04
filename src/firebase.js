@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDXC7BKn4yKFsXSYYzfeSeAMjZtqnM-lro",
@@ -9,8 +9,10 @@ const firebaseConfig = {
     storageBucket: "dnd-dashboard-64a3c.firebasestorage.app",
     messagingSenderId: "611313030995",
     appId: "1:611313030995:web:615752c86aee9e40c673a6"
-  };
+};
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Firestore instance
 export const db = getFirestore(app);
-export const auth = getAuth(app);

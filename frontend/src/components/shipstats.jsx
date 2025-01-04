@@ -207,7 +207,7 @@ const ShipStats = () => {
   const fetchCharacterStats = async (characterId) => {
     try {
       const response = await fetch(
-        `http://localhost:4000/proxy/https://character-service.dndbeyond.com/character/v5/character/${characterId}`
+        `https://dnddashboard-backend.onrender.com/proxy/https://character-service.dndbeyond.com/character/v5/character/${characterId}`
       );
       const characterData = await response.json();
 

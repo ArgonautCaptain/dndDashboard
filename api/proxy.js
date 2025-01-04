@@ -1,21 +1,32 @@
-export default async function handler(req, res) {
-  const { path, ...query } = req.query;
+import fetch from 'node-fetch';
 
-  const apiUrl = `https://dndbeyond.com/api/${path}?${new URLSearchParams(query).toString()}`;
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const targetUrl = req.query.url;
+
+  if (!targetUrl) {
+    return res.status(400).json({ error: 'Missing URL parameter' });
+  }
+
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(targetUrl, {
+      method: req.method,
       headers: {
-        Authorization: `Bearer ${process.env.DNDBEYOND_API_KEY}`, // Use an environment variable
+        ...req.headers,
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch from D&D Beyond API: ${response.status}`);
-    }
-
     const data = await response.json();
-    res.status(200).json(data);
+
+    res.status(response.status).json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Proxy error:', error);
+    res.status(500).json({ error: 'Error occurred while proxying the request' });
   }
 }

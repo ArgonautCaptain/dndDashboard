@@ -559,3 +559,15 @@ body {
   text-align: center;
   margin: 0 !important;
 }
+
+.map-container {
+  position: absolute; /* Makes the container positioned relative to the viewport */
+  bottom: 0;          /* Sticks the bottom of the container to the bottom of the screen */
+  left: 0;            /* Ensures the container starts at the left edge */
+  width: 100%;        /* Makes the container span the full width of the screen */
+  height: 90vh;       /* Sets the container height to 90% of the viewport height */
+  display: flex;      /* Optional: Use flexbox to organize children if needed */
+  justify-content: center; /* Center content horizontally (if needed) */
+  align-items: flex-end;   /* Align content to the bottom of the container */
+  background: #000;   /* Optional: Add a background color for contrast */
+}

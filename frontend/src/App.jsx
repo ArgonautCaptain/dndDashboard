@@ -4,6 +4,7 @@ import Map from './components/map';
 import AdminPanel from './components/adminpanel';
 import ShipDashboard from './components/shipdashboard';
 import './App.css'; // Ensure styles for the header are included
+import 'leaflet/dist/leaflet.css';
 
 const App = () => (
   <>

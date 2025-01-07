@@ -537,7 +537,15 @@ const ShipStats = () => {
   };
 
   // State to track the active role and ability scores
-  const [activeRole, setActiveRole] = useState('First Mate');
+  const [activeRole, setActiveRole] = useState(() => {
+    return localStorage.getItem('activeRole') || 'First Mate'; // Default to 'First Mate' if no value in localStorage
+  });
+
+  const handleActiveRoleChange = (roleName) => {
+    setActiveRole(roleName);
+    localStorage.setItem('activeRole', roleName);
+  };
+
   const [characterData, setCharacterData] = useState(null);
 
   // Fetch character data dynamically when roles and activeRole are ready
@@ -577,12 +585,13 @@ const ShipStats = () => {
               <button
                 key={role.name}
                 className={`tab-button ${activeRole === role.name ? 'active' : ''}`}
-                onClick={() => setActiveRole(role.name)}
+                onClick={() => handleActiveRoleChange(role.name)}
               >
                 {role.name}
               </button>
             ))}
           </div>
+
 
           {/* Role Dashboard */}
           <div className="role-dashboard">

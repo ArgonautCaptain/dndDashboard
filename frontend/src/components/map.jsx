@@ -21,16 +21,16 @@ const Map = () => {
 
   return (
     <div className="map-container">
-      <div style={{ marginBottom: '10px', padding: '5px', background: '#000', color: '#fff' }}>
+{/*       <div style={{ marginBottom: '10px', padding: '5px', background: '#000', color: '#fff' }}>
         <p>Zoom Level: {zoom}</p>
         <p>Center: {`Lat: ${center.lat}, Lng: ${center.lng}`}</p>
-      </div>
+      </div> */}
       <MapContainer
         center={[-79.4, -17.2]} // Default map center coordinates
         zoom={7} // Default zoom level
         minZoom={3}
         maxZoom={7} // Adjust based on your available zoom levels
-        style={{ height: '95vh', width: '80%', backgroundColor: '#2b3b36' }}
+        style={{ height: '100vh', width: '100%', backgroundColor: '#00000000' }}
       >
         <TileLayer
           url="/tiles/{z}/{x}/{y}.png"

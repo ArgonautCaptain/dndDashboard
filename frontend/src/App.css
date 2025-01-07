@@ -70,7 +70,13 @@ body {
 }
 
 .nav-item a:hover {
-  color: #646cff;
+  color: #ff6a6a;
+}
+
+.nav-item.active a {
+  color: #ff4141;
+  text-decoration-thickness: 4px;
+  cursor: default;
 }
 
 /* General Styling for Cards */
@@ -569,5 +575,5 @@ body {
   display: flex;      /* Optional: Use flexbox to organize children if needed */
   justify-content: center; /* Center content horizontally (if needed) */
   align-items: flex-end;   /* Align content to the bottom of the container */
-  background: #000;   /* Optional: Add a background color for contrast */
+  background: #00000000;   /* Optional: Add a background color for contrast */
 }

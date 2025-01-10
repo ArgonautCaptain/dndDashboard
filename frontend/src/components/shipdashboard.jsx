@@ -298,12 +298,12 @@ const ShipStats = () => {
   const getProgressColor = (currentHP, maxHP) => {
     const percentage = (currentHP / maxHP) * 100;
 
-    if (percentage > 50) {
-      return '#00ff00'; // Green for above 50%
+    if (percentage > 75) {
+      return '#00ff00';
     } else if (percentage > 25) {
-      return '#ffff00'; // Yellow for 26%-50%
+      return '#ffff00';
     } else {
-      return '#ff0000'; // Red for 25% or below
+      return '#ff0000';
     }
   };
 
@@ -311,9 +311,9 @@ const ShipStats = () => {
     // Helper function to calculate dynamic color
     const getTextColor = (currentHP, maxHP) => {
       const percentage = (currentHP / maxHP) * 100;
-      if (percentage > 50) return 'lime'; // Green for above 50%
-      if (percentage > 25) return 'yellow'; // Yellow for 26%-50%
-      return 'red'; // Red for 25% or below
+      if (percentage > 75) return 'lime';
+      if (percentage > 25) return 'yellow';
+      return 'red';
     };
 
     return (
@@ -321,11 +321,11 @@ const ShipStats = () => {
         <Box className="progress-container">
           <CircularProgress
             variant="determinate"
-            value={(shipData.controlHelm.hitPoints / shipData.controlHelm.maxHP) * 100}
+            value={(shipData.helmControl.hitPoints / shipData.helmControl.maxHP) * 100}
             size={120} // Adjust size to fit the card
             thickness={4} // Adjust thickness for better aesthetics
             style={{
-              color: getProgressColor(shipData.controlHelm.hitPoints, shipData.controlHelm.maxHP),
+              color: getProgressColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP),
               position: 'absolute',
             }}
           />
@@ -335,16 +335,16 @@ const ShipStats = () => {
           <strong>Helm HP:</strong>{' '}
           <span
             style={{
-              color: getTextColor(shipData.controlHelm.hitPoints, shipData.controlHelm.maxHP),
+              color: getTextColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP),
             }}
           >
-            {shipData.controlHelm.hitPoints}
+            {shipData.helmControl.hitPoints}
           </span>{' '}
-          / {shipData.controlHelm.maxHP}
+          / {shipData.helmControl.maxHP}
         </p>
-        <p>Move up to the speed of one of the ship's sails, with one 90-degree turn.</p>
+        <p style={{ fontStyle: "italic" }}>Move up to the speed of one of the ship's sails, with one 90-degree turn.</p>
         <p>
-          <strong>Steering:</strong> {steeringStatus(shipData.controlHelm.hitPoints)}
+          <strong>Steering:</strong> <span style={{ color: getTextColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP) }}>{steeringStatus(shipData.helmControl.hitPoints)}</span>
         </p>
       </div>
     );
@@ -353,21 +353,24 @@ const ShipStats = () => {
   const hullCard = () => {
     const getTextColor = (currentHP, maxHP) => {
       const percentage = (currentHP / maxHP) * 100;
-      if (percentage > 50) return 'lime'; // Green for above 50%
-      if (percentage > 25) return 'yellow'; // Yellow for 26%-50%
-      return 'red'; // Red for 25% or below
+      if (percentage > 75) return 'lime';
+      if (percentage > 25) return 'yellow';
+      return 'red';
     };
+
+    const hullHP = shipData.hull.hullBow + shipData.hull.hullPort + shipData.hull.hullStarboard + shipData.hull.hullStern;
+    const hullMaxHP = shipData.hull.hullBowMax + shipData.hull.hullPortMax + shipData.hull.hullStarboardMax + shipData.hull.hullSternMax;
 
     return (
       <div className="card hull-card">
         <Box className="progress-container">
           <CircularProgress
             variant="determinate"
-            value={(shipData.hull.hitPoints / shipData.hull.maxHP) * 100}
+            value={(hullHP / hullMaxHP) * 100}
             size={120}
             thickness={4}
             style={{
-              color: getProgressColor(shipData.hull.hitPoints, shipData.hull.maxHP),
+              color: getProgressColor(hullHP, hullMaxHP),
               position: 'absolute',
             }}
           />
@@ -375,10 +378,10 @@ const ShipStats = () => {
         <h3>Hull</h3>
         <p>
           <strong>Hull HP:</strong>{' '}
-          <span style={{ color: getTextColor(shipData.hull.hitPoints, shipData.hull.maxHP) }}>
-            {shipData.hull.hitPoints}
+          <span style={{ color: getTextColor(hullHP, hullMaxHP) }}>
+            {hullHP}
           </span>{' '}
-          / {shipData.hull.maxHP}
+          / {hullMaxHP}
         </p>
         <p>
           <strong>Armor Class:</strong> {shipData.hull.armorClass}
@@ -395,9 +398,9 @@ const ShipStats = () => {
     // Helper function to calculate dynamic color
     const getTextColor = (current, max) => {
       const percentage = (current / max) * 100;
-      if (percentage > 50) return 'lime'; // Green for above 50%
-      if (percentage > 25) return 'yellow'; // Yellow for 26%-50%
-      return 'red'; // Red for 25% or below
+      if (percentage > 75) return 'lime';
+      if (percentage > 25) return 'yellow';
+      return 'red';
     };
 
     const getSpeedColor = (speed) => {
@@ -406,16 +409,20 @@ const ShipStats = () => {
       return 'red'; // Low speed
     };
 
+    const sailsCurrentHP = shipData.movementSails.sailFore + shipData.movementSails.sailMain + shipData.movementSails.sailAft;
+
+    const sailsMaxHP = shipData.movementSails.sailForeMax + shipData.movementSails.sailMainMax + shipData.movementSails.sailAftMax;
+
     return (
       <div className="card sails-card">
         <Box className="progress-container">
           <CircularProgress
             variant="determinate"
-            value={(shipData.movementSails.hitPoints / shipData.movementSails.maxHP) * 100}
+            value={(sailsCurrentHP / sailsMaxHP) * 100}
             size={120}
             thickness={4}
             style={{
-              color: getProgressColor(shipData.movementSails.hitPoints, shipData.movementSails.maxHP),
+              color: getProgressColor(sailsCurrentHP, sailsMaxHP),
               position: 'absolute',
             }}
           />
@@ -425,23 +432,23 @@ const ShipStats = () => {
           <strong>Sails HP:</strong>{' '}
           <span
             style={{
-              color: getTextColor(shipData.movementSails.hitPoints, shipData.movementSails.maxHP),
+              color: getTextColor(sailsCurrentHP, sailsMaxHP),
             }}
           >
-            {shipData.movementSails.hitPoints}
+            {sailsCurrentHP}
           </span>{' '}
-          / {shipData.movementSails.maxHP}
+          / {sailsMaxHP}
         </p>
         <p>
           <strong>Sailing Speed:</strong>{' '}
           <span
             style={{
               color: getSpeedColor(
-                calculatedSpeed(shipData.movementSails.speed, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)
+                calculatedSpeed(shipData.movementSails.speed, sailsCurrentHP, sailsMaxHP)
               ),
             }}
           >
-            {calculatedSpeed(shipData.movementSails.speed, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)} ft.
+            {calculatedSpeed(shipData.movementSails.speed, sailsCurrentHP, sailsMaxHP)} ft.
           </span>
         </p>
         <p>
@@ -449,11 +456,11 @@ const ShipStats = () => {
           <span
             style={{
               color: getSpeedColor(
-                calculatedSpeed(shipData.movementSails.speedModifiers.withWind, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)
+                calculatedSpeed(shipData.movementSails.speedModifiers.withWind, sailsCurrentHP, sailsMaxHP)
               ),
             }}
           >
-            {calculatedSpeed(shipData.movementSails.speedModifiers.withWind, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)} ft.
+            {calculatedSpeed(shipData.movementSails.speedModifiers.withWind, sailsCurrentHP, sailsMaxHP)} ft.
           </span>
         </p>
         <p>
@@ -461,11 +468,11 @@ const ShipStats = () => {
           <span
             style={{
               color: getSpeedColor(
-                calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)
+                calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, sailsCurrentHP, sailsMaxHP)
               ),
             }}
           >
-            {calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, shipData.movementSails.hitPoints, shipData.movementSails.maxHP)} ft.
+            {calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, sailsCurrentHP, sailsMaxHP)} ft.
           </span>
         </p>
       </div>
@@ -533,7 +540,7 @@ const ShipStats = () => {
     if (helmHP === 0) {
       return "Non-functional";
     }
-    return "Nominal";
+    return "Functional";
   };
 
   // State to track the active role and ability scores
@@ -573,6 +580,287 @@ const ShipStats = () => {
   }
 
   const shipDeploymentDashboard = () => {
+    const getRolePanelTitle = (role) => {
+      switch (role) {
+        case 'First Mate':
+          return 'Helm Control Panel';
+        case 'Comms Officer':
+          return 'Speaking Stone Panel';
+        case 'Boatswain':
+          return 'Damage Report Panel';
+        case 'Quartermaster':
+          return 'Ship Manifest Panel';
+        case 'Lookout':
+          return 'Lookout Placeholder Panel';
+        case 'Master Gunner':
+          return 'Weapons Status Panel';
+        case 'Captain':
+          return 'Captain Placeholder Panel';
+        case 'Personnel Officer':
+          return 'Personnel Officer Placeholder Panel';
+        default:
+          return 'Role Panel';
+      }
+    };
+
+    const getDamageColor = (currentHP, maxHP) => {
+      const percentage = (currentHP / maxHP) * 100;
+      if (percentage > 99) return 'lime';
+      if (percentage > 49) return 'yellow';
+      return 'red';
+    };
+
+    const boatswainPanel = () => {
+      const bowHullColor = getDamageColor(shipData.hull.hullBow, shipData.hull.hullBowMax);
+      const portHullColor = getDamageColor(shipData.hull.hullPort, shipData.hull.hullPortMax);
+      const starboardHullColor = getDamageColor(shipData.hull.hullStarboard, shipData.hull.hullStarboardMax);
+      const sternHullColor = getDamageColor(shipData.hull.hullStern, shipData.hull.hullSternMax);
+
+
+      const foresailColor = getDamageColor(shipData.movementSails.sailFore, shipData.movementSails.sailForeMax);
+      const mainsailColor = getDamageColor(shipData.movementSails.sailMain, shipData.movementSails.sailMainMax);
+      const aftSailColor = getDamageColor(shipData.movementSails.sailAft, shipData.movementSails.sailAftMax);
+
+      const helmColor = getDamageColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP);
+
+
+      return (
+        <div className="role-utility-panel">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 900 240"
+            width="900px"
+            height="240px"
+            style={{ background: "#00000000" }}
+          >
+            {/* Bow Hull */}
+            <path
+              id="Bow"
+              d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230"
+              fill="none"
+              stroke={bowHullColor}
+              stroke-miterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="55"
+              y="120"
+              stroke={bowHullColor}
+              fill={bowHullColor}
+              textAnchor="left"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Bow: {shipData.hull.hullBow} / {shipData.hull.hullBowMax}
+            </text>
+
+            {/* Port Hull */}
+            <line
+              id="Port"
+              x1="240"
+              y1="230"
+              x2="720"
+              y2="230"
+              fill="none"
+              stroke={portHullColor}
+              stroke-miterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="500"
+              y="210"
+              stroke={portHullColor}
+              fill={portHullColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Port: {shipData.hull.hullPort} / {shipData.hull.hullPortMax}
+            </text>
+
+            {/* Starboard Hull */}
+            <line
+              id="Starboard"
+              x1="240"
+              y1="10"
+              x2="720"
+              y2="10"
+              fill="none"
+              stroke={starboardHullColor}
+              stroke-miterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="500"
+              y="30"
+              stroke={starboardHullColor}
+              fill={starboardHullColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Starboard: {shipData.hull.hullStarboard} / {shipData.hull.hullStarboardMax}
+            </text>
+
+            {/* Stern Hull */}
+            <path
+              id="Stern"
+              d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740"
+              fill="none"
+              stroke={sternHullColor}
+              stroke-miterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="790"
+              y="120"
+              stroke={sternHullColor}
+              fill={sternHullColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Stern: {shipData.hull.hullStern} / {shipData.hull.hullSternMax}
+            </text>
+            {/* Foresail */}
+            <rect
+              width="170"
+              height="50"
+              x="160"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="300"
+              cy="120"
+              r="15"
+              fill={foresailColor}
+              stroke={foresailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="175"
+              y="120"
+              stroke={foresailColor}
+              fill={foresailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Foresail: {shipData.movementSails.sailFore} / {shipData.movementSails.sailForeMax}
+            </text>
+            {/* Mainsail */}
+            <rect
+              width="170"
+              height="50"
+              x="360"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="500"
+              cy="120"
+              r="15"
+              fill={mainsailColor}
+              stroke={mainsailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="375"
+              y="120"
+              stroke={mainsailColor}
+              fill={mainsailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Mainsail: {shipData.movementSails.sailMain} / {shipData.movementSails.sailMainMax}
+            </text>
+            {/* Aft Sail */}
+            <rect
+              width="170"
+              height="50"
+              x="560"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="700"
+              cy="120"
+              r="15"
+              fill={aftSailColor}
+              stroke={aftSailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="575"
+              y="120"
+              stroke={aftSailColor}
+              fill={aftSailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Aft Sail: {shipData.movementSails.sailAft} / {shipData.movementSails.sailAftMax}
+            </text>
+            {/* Helm */}
+            <path
+              stroke="grey"
+              fill="none"
+              d="M745,85 h30 c0,0,5,0,5,5 v60 c0,0,0,5,5,5 h25 c0,0,5,0,5,5 v35 c0,0,0,5,-5,5 h-100 c0,0,-5,0,-5,-5 v-35 c0,0,0,-5,5,-5 h25 c0,0,5,0,5,-5 v-60 c0,0,0,-5,5,-5"
+            />
+            <rect
+              width="20"
+              height="50"
+              x="750"
+              y="95"
+              fill="none"
+              stroke={helmColor}
+              strokeWidth="4"
+            />
+            <line
+              id="helm"
+              x1="760"
+              y1="105"
+              x2="760"
+              y2="135"
+              stroke={helmColor}
+              strokeWidth="4"
+            />
+            <text
+              x="760"
+              y="177.5"
+              stroke={helmColor}
+              fill={helmColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Helm {shipData.helmControl.hitPoints} / {shipData.helmControl.maxHP}
+            </text>
+          </svg>
+        </div>
+      )
+    };
+
+    const boatswainActionsPanel = () => {
+      return (
+        <div className="role-actions-panel">
+          <h4>Actions Panel</h4>
+          <p>This is the Boatswain actions panel.</p>
+        </div>
+      );
+    }
+
     return (
       <div className="card">
         <div className="ship-deployments">
@@ -592,23 +880,49 @@ const ShipStats = () => {
             ))}
           </div>
 
-
           {/* Role Dashboard */}
           <div className="role-dashboard">
             <div className="role-tabs-navigation">
-              {['Features', 'Placeholder 1', 'Placeholder 2'].map((tab, index) => (
-                <button
-                  key={tab}
-                  className={`role-tab-button ${activeRoleTab === index ? 'active' : ''}`}
-                  onClick={() => setActiveRoleTab(index)}
-                >
-                  {tab}
-                </button>
-              ))}
+              <button
+                className={`role-tab-button ${activeRoleTab === 0 ? 'active' : ''}`}
+                onClick={() => setActiveRoleTab(0)}
+              >
+                {getRolePanelTitle(activeRole)}
+              </button>
+              <button
+                className={`role-tab-button ${activeRoleTab === 1 ? 'active' : ''}`}
+                onClick={() => setActiveRoleTab(1)}
+              >
+                Actions
+              </button>
+              <button
+                className={`role-tab-button ${activeRoleTab === 2 ? 'active' : ''}`}
+                onClick={() => setActiveRoleTab(2)}
+              >
+                Features
+              </button>
             </div>
 
             <div className="role-tab-content">
               {activeRoleTab === 0 && (
+                <>
+                  {activeRole === 'Boatswain' ? (
+                    boatswainPanel()
+                  ) : (
+                    <p>This is the {getRolePanelTitle(activeRole)} control panel.</p>
+                  )}
+                </>
+              )}
+              {activeRoleTab === 1 && (
+                <>
+                  {activeRole === 'Boatswain' ? (
+                    boatswainActionsPanel()
+                  ) : (
+                    <p>This is the {activeRole} actions panel.</p>
+                  )}
+                </>
+              )}
+              {activeRoleTab === 2 && (
                 <table className="features-table">
                   <thead>
                     <tr>
@@ -619,27 +933,30 @@ const ShipStats = () => {
                   </thead>
                   <tbody>
                     {activeFeatures.map((ability, index) => {
-                      const isUnavailable = ability.rank > roles.find((role) => role.name === activeRole)?.rank;
+                      const isUnavailable =
+                        ability.rank > roles.find((role) => role.name === activeRole)?.rank;
 
                       return (
                         <tr key={index} className={isUnavailable ? 'unavailable-feature' : ''}>
                           <td>{ability.rank}</td>
                           <td>{ability.name}</td>
-                          <td>{ability.description}</td>
+                          <td className="ability-description">{ability.description}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               )}
-              {activeRoleTab === 1 && <p>Placeholder content for Tab 1</p>}
-              {activeRoleTab === 2 && <p>Placeholder content for Tab 2</p>}
+
+
             </div>
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
+
+
 
   const commandDiceCard = () => {
     //TODO: MAKE THE BUTTON POP UP A CONFIRMATION MODAL AND THEN HAVE IT SUBTRACT A COMMAND DIE FROM FIREBASE ("Are you sure you want to use a command die? You will have x remaining")

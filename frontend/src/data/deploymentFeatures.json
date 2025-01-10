@@ -120,18 +120,18 @@
       "feats": [
         {
           "rank": 1,
-          "name": "Munitions Expert",
-          "description": "As a bonus action, you may choose one of the following forms of cannon ammunition to add an additional effect to your next attack: Chain Shot, Smoke Shells, Inferno Shells, Armor Piercing Rounds"
-        },
-        {
-          "rank": 2,
           "name": "Quick Reload",
           "description": "As a bonus action, you can expend one command die to immediately reload a number of ship weapons equal to the amount rolled on the command die. You may use this feature a number of times equal to your ranks in Master Gunner. You regain all expended uses when you complete a long rest."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "name": "Adjust Fire",
           "description": "When you roll for damage with a ship weapon, you can reroll one of the dice, but you must use the new result. You may use this feature a number of times equal to your ranks in Master Gunner. You regain all expended uses when you complete a long rest."
+        },
+        {
+          "rank": 3,
+          "name": "Munitions Expert",
+          "description": "As a bonus action, you may choose one of the following forms of cannon ammunition to add an additional effect to your next attack: Chain Shot, Smoke Shells, Inferno Shells, Armor Piercing Rounds"
         },
         {
           "rank": 4,

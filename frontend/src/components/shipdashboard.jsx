@@ -896,7 +896,7 @@ const ShipStats = () => {
       const renderWeaponsLowerStarboard = () => {
         const icons = [];
         const iconSpacing = 80; // Space between icons
-        const startX = 250; // Starting X position for the icons
+        const startX = 250 + ((6 - (lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard))*40);
         const startY = -7; // Starting Y position for the icons
 
         // Render cannons
@@ -986,7 +986,7 @@ const ShipStats = () => {
       const renderWeaponsLowerPort = () => {
         const icons = [];
         const iconSpacing = 80; // Space between icons
-        const startX = 250; // Starting X position for the icons
+        const startX = 250 + ((6 - (lowerDeckBallistaePort + lowerDeckCannonsPort))*40);
         const startY = 162; // Starting Y position for the icons
 
         // Render cannons
@@ -1076,7 +1076,7 @@ const ShipStats = () => {
       const renderWeaponsMainStarboard = () => {
         const icons = [];
         const iconSpacing = 80; // Space between icons
-        const startX = 250 + ((6 - (mainDeckBallistaeStarboard + mainDeckCannonsStarboard))*25); // Starting X position for the icons
+        const startX = 250 + ((6 - (mainDeckBallistaeStarboard + mainDeckCannonsStarboard))*40); // Starting X position for the icons
         const startY = -7; // Starting Y position for the icons
 
         // Render cannons
@@ -1166,7 +1166,7 @@ const ShipStats = () => {
       const renderWeaponsMainPort = () => {
         const icons = [];
         const iconSpacing = 80; // Space between icons
-        const startX = 250 + ((6 - (mainDeckBallistaePort + mainDeckCannonsPort))*25); // Starting X position for the icons
+        const startX = 250 + ((6 - (mainDeckBallistaePort + mainDeckCannonsPort))*40); // Starting X position for the icons
         const startY = 162; // Starting Y position for the icons
 
         // Render cannons

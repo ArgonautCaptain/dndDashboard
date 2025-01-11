@@ -1386,7 +1386,7 @@ const ShipDashboard = () => {
                 className={`role-tab-button ${activeRoleTab === 0 ? 'active' : ''}`}
                 onClick={() => setActiveRoleTab(0)}
               >
-                {getRolePanelTitle(activeRole)}
+                Features
               </button>
               <button
                 className={`role-tab-button ${activeRoleTab === 1 ? 'active' : ''}`}
@@ -1398,12 +1398,12 @@ const ShipDashboard = () => {
                 className={`role-tab-button ${activeRoleTab === 2 ? 'active' : ''}`}
                 onClick={() => setActiveRoleTab(2)}
               >
-                Features
+                {getRolePanelTitle(activeRole)}
               </button>
             </div>
 
             <div className="role-tab-content">
-              {activeRoleTab === 0 && (
+              {activeRoleTab === 2 && (
                 <>
                   {activeRole === 'Boatswain' ? (
                     boatswainPanel()
@@ -1423,7 +1423,7 @@ const ShipDashboard = () => {
                   )}
                 </>
               )}
-              {activeRoleTab === 2 && (
+              {activeRoleTab === 0 && (
                 <table className="features-table">
                   <thead>
                     <tr>

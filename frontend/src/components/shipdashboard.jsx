@@ -11,6 +11,8 @@ const ShipDashboard = () => {
   const [shipData, setShipData] = useState(null);
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
+  const [orders, setOrders] = useState([]); // Empty orders list
+
 
   // Real-time listener for Firestore updates
   useEffect(() => {
@@ -45,6 +47,15 @@ const ShipDashboard = () => {
 
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
+
+  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 1 : 0;
+  const [actionsRemaining, setActionsRemaining] = useState(weaponsActionsPerTurn);
+
+  useEffect(() => {
+    if (weaponsActionsPerTurn > 0) {
+      setActionsRemaining(weaponsActionsPerTurn);
+    }
+  }, [weaponsActionsPerTurn]);
 
   // Calculate ship sailing speed
   const calculatedSpeed = (baseSpeed, currentHP, maxHP) => {
@@ -128,6 +139,7 @@ const ShipDashboard = () => {
       </div>
     )
   }
+
 
   const crewCard = (
     commandCrewOnboard,
@@ -931,7 +943,6 @@ const ShipDashboard = () => {
   const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
   const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
   const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
-  const weaponsActionsPerTurn = shipData.soulsOnboard.weaponsCrew + 1;
 
   const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
   const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
@@ -1147,6 +1158,8 @@ const ShipDashboard = () => {
     return icons;
   };
 
+
+
   const masterGunnerPanel = () => {
     return (
       <div className="role-utility-panel">
@@ -1213,6 +1226,8 @@ const ShipDashboard = () => {
       </div>
     );
   };
+
+
 
   const shipDeploymentDashboard = () => {
     return (
@@ -1311,6 +1326,7 @@ const ShipDashboard = () => {
       </div>
     );
   };
+
 
   return (
     <div className="sheet-container">

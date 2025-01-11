@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
 import { Box } from '@mui/material';
 import deploymentFeatures from '../data/deploymentFeatures.json'
 
 
-const ShipStats = () => {
+const ShipDashboard = () => {
   const [shipData, setShipData] = useState(null);
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
-
 
   // Real-time listener for Firestore updates
   useEffect(() => {
@@ -46,10 +46,6 @@ const ShipStats = () => {
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
-  /* useEffect(() => {
-    console.log('Roles Array:', roles); // Debugging roles
-  }, [roles]); */
-
   // Calculate ship sailing speed
   const calculatedSpeed = (baseSpeed, currentHP, maxHP) => {
     if (currentHP === 0) {
@@ -67,6 +63,71 @@ const ShipStats = () => {
     }
     return Math.floor((score - 10) / 2);
   };
+
+  const commandDiceCard = () => {
+    //TODO: MAKE THE BUTTON POP UP A CONFIRMATION MODAL AND THEN HAVE IT SUBTRACT A COMMAND DIE FROM FIREBASE ("Are you sure you want to use a command die? You will have x remaining")
+    //TODO: MAKE THE FORMATTING OF THE BUTTON BETTER
+    return (
+      <div className="card command-dice-card">
+        <h3>Command Dice</h3>
+        <p><strong>Type:</strong> d{shipData.shipDice.commandDiceType}</p>
+        <p><strong>Current Command Dice:</strong> {shipData.shipDice.commandDiceLeft} / {shipData.shipDice.commandDiceMax}</p>
+        <button className="centered-in-card">Roll Command Die!</button>
+      </div>
+    )
+  }
+
+  const hullDiceCard = () => {
+    //TODO: SAME AS COMMAND DICE CARD
+    return (
+      <div className="card hull-dice-card">
+        <h3>Hull Dice</h3>
+        <p><strong>Type:</strong> d{shipData.shipDice.hullDiceType}</p>
+        <p><strong>Current Hull Dice:</strong> {shipData.shipDice.hullDiceLeft} / {shipData.shipDice.hullDiceMax}</p>
+        <button className="centered-in-card">Roll Hull Die!</button>
+      </div>
+    )
+  }
+
+  const characterDataCard = () => {
+    return (
+      <div className="card character-data-card">
+        {characterData ? (
+          <>
+            {/* Character Name as Header */}
+            <h3 className="character-name-header">{characterData.name}</h3>
+
+            {/* Grid with Two Columns */}
+
+            {/* Left Column */}
+            <div className="character-info">
+              <div><strong>Deployment Role:</strong> {activeRole}</div>
+              <div><strong>Deployment Rank:</strong> {roles.find((role) => role.name === activeRole)?.rank || 'Unknown'}</div>
+            </div>
+            <hr />
+            {/* Right Column */}
+            <div className="character-scores-grid">
+              {Object.entries(characterData.stats).map(([ability, score]) => {
+                const modifier = Math.floor((score - 10) / 2);
+                return (
+                  <div key={ability} className="character-score-card">
+                    <p className="character-score-name">{ability}</p>
+                    <p className="character-score-modifier">
+                      {modifier >= 0 ? '+' : ''}{modifier}
+                    </p>
+                    <p className="character-score-value">{score}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+          </>
+        ) : (
+          <p>Loading character data...</p>
+        )}
+      </div>
+    )
+  }
 
   const crewCard = (
     commandCrewOnboard,
@@ -579,497 +640,581 @@ const ShipStats = () => {
   const activeFeatures = roles.find((role) => role.name === activeRole)?.features || [];
 
 
+
+
+  const getRolePanelTitle = (role) => {
+    switch (role) {
+      case 'First Mate':
+        return 'Helm Control Panel';
+      case 'Comms Officer':
+        return 'Speaking Stone Panel';
+      case 'Boatswain':
+        return 'Damage Report Panel';
+      case 'Quartermaster':
+        return 'Ship Manifest Panel';
+      case 'Lookout':
+        return 'Lookout Placeholder Panel';
+      case 'Master Gunner':
+        return 'Weapons Panel';
+      case 'Captain':
+        return 'Captain Placeholder Panel';
+      case 'Personnel Officer':
+        return 'Personnel Officer Placeholder Panel';
+      default:
+        return 'Role Panel';
+    }
+  };
+
+  const getDamageColor = (currentHP, maxHP) => {
+    const percentage = (currentHP / maxHP) * 100;
+    if (percentage > 99) return 'lime';
+    if (percentage > 49) return 'yellow';
+    return 'red';
+  };
+
+  const boatswainPanel = () => {
+    const bowHullColor = getDamageColor(shipData.hull.hullBow, shipData.hull.hullBowMax);
+    const portHullColor = getDamageColor(shipData.hull.hullPort, shipData.hull.hullPortMax);
+    const starboardHullColor = getDamageColor(shipData.hull.hullStarboard, shipData.hull.hullStarboardMax);
+    const sternHullColor = getDamageColor(shipData.hull.hullStern, shipData.hull.hullSternMax);
+
+
+    const foresailColor = getDamageColor(shipData.movementSails.sailFore, shipData.movementSails.sailForeMax);
+    const mainsailColor = getDamageColor(shipData.movementSails.sailMain, shipData.movementSails.sailMainMax);
+    const aftSailColor = getDamageColor(shipData.movementSails.sailAft, shipData.movementSails.sailAftMax);
+
+    const helmColor = getDamageColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP);
+
+
+    return (
+      <div className="role-utility-panel">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 900 240"
+          width="900px"
+          height="240px"
+          style={{ background: "#00000000" }}
+        >
+          {/* Bow Hull */}
+          <path
+            id="Bow"
+            d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230"
+            fill="none"
+            stroke={bowHullColor}
+            strokeMiterlimit="1"
+            strokeWidth="4"
+          />
+          <text
+            x="55"
+            y="120"
+            stroke={bowHullColor}
+            fill={bowHullColor}
+            textAnchor="left"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Bow: {shipData.hull.hullBow} / {shipData.hull.hullBowMax}
+          </text>
+
+          {/* Port Hull */}
+          <line
+            id="Port"
+            x1="240"
+            y1="230"
+            x2="720"
+            y2="230"
+            fill="none"
+            stroke={portHullColor}
+            strokeMiterlimit="1"
+            strokeWidth="4"
+          />
+          <text
+            x="500"
+            y="210"
+            stroke={portHullColor}
+            fill={portHullColor}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Port: {shipData.hull.hullPort} / {shipData.hull.hullPortMax}
+          </text>
+
+          {/* Starboard Hull */}
+          <line
+            id="Starboard"
+            x1="240"
+            y1="10"
+            x2="720"
+            y2="10"
+            fill="none"
+            stroke={starboardHullColor}
+            strokeMiterlimit="1"
+            strokeWidth="4"
+          />
+          <text
+            x="500"
+            y="30"
+            stroke={starboardHullColor}
+            fill={starboardHullColor}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Starboard: {shipData.hull.hullStarboard} / {shipData.hull.hullStarboardMax}
+          </text>
+
+          {/* Stern Hull */}
+          <path
+            id="Stern"
+            d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740"
+            fill="none"
+            stroke={sternHullColor}
+            strokeMiterlimit="1"
+            strokeWidth="4"
+          />
+          <text
+            x="790"
+            y="120"
+            stroke={sternHullColor}
+            fill={sternHullColor}
+            textAnchor="right"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Stern: {shipData.hull.hullStern} / {shipData.hull.hullSternMax}
+          </text>
+          {/* Foresail */}
+          <rect
+            width="170"
+            height="50"
+            x="160"
+            y="95"
+            rx="5"
+            ry="5"
+            stroke="grey"
+            fill="none"
+          />
+          <circle
+            cx="300"
+            cy="120"
+            r="15"
+            fill={foresailColor}
+            stroke={foresailColor}
+            strokeWidth="1"
+          />
+          <text
+            x="175"
+            y="120"
+            stroke={foresailColor}
+            fill={foresailColor}
+            textAnchor="right"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Foresail: {shipData.movementSails.sailFore} / {shipData.movementSails.sailForeMax}
+          </text>
+          {/* Mainsail */}
+          <rect
+            width="170"
+            height="50"
+            x="360"
+            y="95"
+            rx="5"
+            ry="5"
+            stroke="grey"
+            fill="none"
+          />
+          <circle
+            cx="500"
+            cy="120"
+            r="15"
+            fill={mainsailColor}
+            stroke={mainsailColor}
+            strokeWidth="1"
+          />
+          <text
+            x="375"
+            y="120"
+            stroke={mainsailColor}
+            fill={mainsailColor}
+            textAnchor="right"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Mainsail: {shipData.movementSails.sailMain} / {shipData.movementSails.sailMainMax}
+          </text>
+          {/* Aft Sail */}
+          <rect
+            width="170"
+            height="50"
+            x="560"
+            y="95"
+            rx="5"
+            ry="5"
+            stroke="grey"
+            fill="none"
+          />
+          <circle
+            cx="700"
+            cy="120"
+            r="15"
+            fill={aftSailColor}
+            stroke={aftSailColor}
+            strokeWidth="1"
+          />
+          <text
+            x="575"
+            y="120"
+            stroke={aftSailColor}
+            fill={aftSailColor}
+            textAnchor="right"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Aft Sail: {shipData.movementSails.sailAft} / {shipData.movementSails.sailAftMax}
+          </text>
+          {/* Helm */}
+          <path
+            stroke="grey"
+            fill="none"
+            d="M745,85 h30 c0,0,5,0,5,5 v60 c0,0,0,5,5,5 h25 c0,0,5,0,5,5 v35 c0,0,0,5,-5,5 h-100 c0,0,-5,0,-5,-5 v-35 c0,0,0,-5,5,-5 h25 c0,0,5,0,5,-5 v-60 c0,0,0,-5,5,-5"
+          />
+          <rect
+            width="20"
+            height="50"
+            x="750"
+            y="95"
+            fill="none"
+            stroke={helmColor}
+            strokeWidth="4"
+          />
+          <line
+            id="helm"
+            x1="760"
+            y1="105"
+            x2="760"
+            y2="135"
+            stroke={helmColor}
+            strokeWidth="4"
+          />
+          <text
+            x="760"
+            y="177.5"
+            stroke={helmColor}
+            fill={helmColor}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="ship-svg-text"
+          >
+            Helm {shipData.helmControl.hitPoints} / {shipData.helmControl.maxHP}
+          </text>
+        </svg>
+      </div>
+    )
+  };
+
+  const boatswainActionsPanel = () => {
+    return (
+      <div className="role-actions-panel">
+        <h4>Actions Panel</h4>
+        <p>This is the Boatswain actions panel.</p>
+      </div>
+    );
+  };
+
   if (!shipData) {
     return <p>Loading ship stats...</p>;
   }
 
-  const shipDeploymentDashboard = () => {
-    const getRolePanelTitle = (role) => {
-      switch (role) {
-        case 'First Mate':
-          return 'Helm Control Panel';
-        case 'Comms Officer':
-          return 'Speaking Stone Panel';
-        case 'Boatswain':
-          return 'Damage Report Panel';
-        case 'Quartermaster':
-          return 'Ship Manifest Panel';
-        case 'Lookout':
-          return 'Lookout Placeholder Panel';
-        case 'Master Gunner':
-          return 'Weapons Panel';
-        case 'Captain':
-          return 'Captain Placeholder Panel';
-        case 'Personnel Officer':
-          return 'Personnel Officer Placeholder Panel';
-        default:
-          return 'Role Panel';
-      }
-    };
+  const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
+  const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
+  const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
+  const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
+  const weaponsActionsPerTurn = shipData.soulsOnboard.weaponsCrew + 1;
 
-    const getDamageColor = (currentHP, maxHP) => {
-      const percentage = (currentHP / maxHP) * 100;
-      if (percentage > 99) return 'lime';
-      if (percentage > 49) return 'yellow';
-      return 'red';
-    };
+  const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
+  const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
+  const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
+  const lowerDeckBallistaeStarboard = shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData.length;
+  const mainDeckCannonsPort = shipData.weapons.cannons.mainDeck.portSide.weaponData.length;
+  const mainDeckCannonsStarboard = shipData.weapons.cannons.mainDeck.starboardSide.weaponData.length;
+  const lowerDeckCannonsPort = shipData.weapons.cannons.lowerDeck.portSide.weaponData.length;
+  const lowerDeckCannonsStarboard = shipData.weapons.cannons.lowerDeck.starboardSide.weaponData.length;
+  const mainDeckMangonelsPort = shipData.weapons.mangonels.mainDeck.portSide.weaponData.length;
+  const mainDeckMangonelsStarboard = shipData.weapons.mangonels.mainDeck.starboardSide.weaponData.length;
+  const mainDeckTrebuchetsPort = shipData.weapons.trebuchets.mainDeck.portSide.weaponData.length;
+  const mainDeckTrebuchetsStarboard = shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData.length;
+  const totalBallistae = mainDeckBallistaePort + mainDeckBallistaeStarboard + lowerDeckBallistaePort + lowerDeckBallistaeStarboard;
+  const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
+  const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
+  const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
 
-    const boatswainPanel = () => {
-      const bowHullColor = getDamageColor(shipData.hull.hullBow, shipData.hull.hullBowMax);
-      const portHullColor = getDamageColor(shipData.hull.hullPort, shipData.hull.hullPortMax);
-      const starboardHullColor = getDamageColor(shipData.hull.hullStarboard, shipData.hull.hullStarboardMax);
-      const sternHullColor = getDamageColor(shipData.hull.hullStern, shipData.hull.hullSternMax);
+  const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
+  const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
+  const cannonsNormalRange = shipData.weapons.cannons.statBlock.normalRange;
+  const cannonsMaxRange = shipData.weapons.cannons.statBlock.maxRange;
+  const mainDeckWeaponsPort = mainDeckBallistaePort + mainDeckCannonsPort + mainDeckMangonelsPort + mainDeckTrebuchetsPort;
+  const mainDeckWeaponsStarboard = mainDeckBallistaeStarboard + mainDeckCannonsStarboard + mainDeckMangonelsStarboard + mainDeckTrebuchetsStarboard;
+  const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
+  const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
 
+  const ballistaWeaponStats = () => {
+    return (
+      <>
+        <h4>
+          Ballista
+        </h4>
+        <p>
+          <strong>Armor Class:</strong> {shipData.weapons.ballistae.statBlock.armorClass}
+        </p>
+        <p>
+          <strong>Range:</strong> {ballistaeNormalRange} / {ballistaeMaxRange} ft.
+        </p>
+        <p className="ammo-description">
+          <strong>Ballista Bolt:</strong> +{shipData.weapons.ballistae.ammo.boltStandard.toHit} to hit, {shipData.weapons.ballistae.ammo.boltStandard.damageDiceNumber}d{shipData.weapons.ballistae.ammo.boltStandard.damageDiceType} damage
+        </p>
+      </>
+    )
+  };
 
-      const foresailColor = getDamageColor(shipData.movementSails.sailFore, shipData.movementSails.sailForeMax);
-      const mainsailColor = getDamageColor(shipData.movementSails.sailMain, shipData.movementSails.sailMainMax);
-      const aftSailColor = getDamageColor(shipData.movementSails.sailAft, shipData.movementSails.sailAftMax);
+  const cannonWeaponStats = () => {
+    return (
+      <>
+        <h4>
+          Cannon
+        </h4>
+        <p>
+          <strong>Armor Class:</strong> {shipData.weapons.cannons.statBlock.armorClass}
+        </p>
+        <p>
+          <strong>Range:</strong> {cannonsNormalRange} / {cannonsMaxRange} ft.
+        </p>
+        <p className="ammo-description">
+          <strong>Cannonball:</strong> +{shipData.weapons.cannons.ammo.cannonballStandard.toHit} to hit, {shipData.weapons.cannons.ammo.cannonballStandard.damageDiceNumber}d{shipData.weapons.cannons.ammo.cannonballStandard.damageDiceType} damage
+        </p>
+      </>
+    )
+  };
 
-      const helmColor = getDamageColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP);
+  const xOffsetTracker = {
+    main: { port: 0, starboard: 0 },
+    lower: { port: 0, starboard: 0 },
+  };
 
+  const renderWeapons = (weaponData, deck, side, type) => {
+    const isPort = side === "port";
+    const isMainDeck = deck === "main";
+    const initialOffset = (30 * (6 - (isMainDeck ? (isPort ? mainDeckWeaponsPort : mainDeckWeaponsStarboard) : (isPort ? lowerDeckWeaponsPort : lowerDeckWeaponsStarboard))));
+    const startX = 250 + initialOffset + xOffsetTracker[deck][side];
+    const startY = isMainDeck ? (isPort ? 162 : -7) : (isPort ? 162 : -7);
+    const iconSpacing = 80;
+    const width = 65;
+    const height = 80;
+    const viewBox = type === "cannon" ? "0 0 31 84" : "0 0 78 65";
 
-      return (
-        <div className="role-utility-panel">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 900 240"
-            width="900px"
-            height="240px"
-            style={{ background: "#00000000" }}
-          >
-            {/* Bow Hull */}
-            <path
-              id="Bow"
-              d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230"
-              fill="none"
-              stroke={bowHullColor}
-              strokeMiterlimit="1"
-              strokeWidth="4"
-            />
-            <text
-              x="55"
-              y="120"
-              stroke={bowHullColor}
-              fill={bowHullColor}
-              textAnchor="left"
-              dominantBaseline="middle"
-              className="ship-svg-text"
+    const icons = weaponData.map((weapon, i) => {
+      const fillColor = weapon.isLoaded ? "lime" : "red";
+      const textColor = "white";
+      const xOffset = startX + i * iconSpacing;
+      const yOffset = startY;
+
+      const tooltipContent = type === "ballista" ? (
+        <>
+          <h3 style={{ margin: 0 }}>Ballista</h3>
+          <p>
+            <strong>Armor Class:</strong> {shipData.weapons.ballistae.statBlock.armorClass}
+          </p>
+          <p>
+            <strong>Range:</strong> {ballistaeNormalRange}/{ballistaeMaxRange} ft.
+          </p>
+          <p>
+            <strong>Damage:</strong> +{shipData.weapons.ballistae.ammo.boltStandard.toHit} to hit,{" "}
+            {shipData.weapons.ballistae.ammo.boltStandard.damageDiceNumber}d
+            {shipData.weapons.ballistae.ammo.boltStandard.damageDiceType}
+          </p>
+          <p>
+            <strong>Loaded:</strong>{" "}
+            <span
+              style={{
+                color: weapon.isLoaded ? "lime" : "red",
+                fontWeight: "bold",
+              }}
             >
-              Bow: {shipData.hull.hullBow} / {shipData.hull.hullBowMax}
-            </text>
-
-            {/* Port Hull */}
-            <line
-              id="Port"
-              x1="240"
-              y1="230"
-              x2="720"
-              y2="230"
-              fill="none"
-              stroke={portHullColor}
-              strokeMiterlimit="1"
-              strokeWidth="4"
-            />
-            <text
-              x="500"
-              y="210"
-              stroke={portHullColor}
-              fill={portHullColor}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="ship-svg-text"
+              {weapon.isLoaded ? "Yes" : "No"}
+            </span>
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 style={{ margin: 0 }}>Cannon</h3>
+          <p>
+            <strong>Armor Class:</strong> {shipData.weapons.cannons.statBlock.armorClass}
+          </p>
+          <p>
+            <strong>Range:</strong> {cannonsNormalRange}/{cannonsMaxRange} ft.
+          </p>
+          <p>
+            <strong>Damage:</strong> +{shipData.weapons.cannons.ammo.cannonballStandard.toHit} to hit,{" "}
+            {shipData.weapons.cannons.ammo.cannonballStandard.damageDiceNumber}d
+            {shipData.weapons.cannons.ammo.cannonballStandard.damageDiceType}
+          </p>
+          <p>
+            <strong>Loaded:</strong>{" "}
+            <span
+              style={{
+                color: weapon.isLoaded ? "lime" : "red",
+                fontWeight: "bold",
+              }}
             >
-              Port: {shipData.hull.hullPort} / {shipData.hull.hullPortMax}
-            </text>
-
-            {/* Starboard Hull */}
-            <line
-              id="Starboard"
-              x1="240"
-              y1="10"
-              x2="720"
-              y2="10"
-              fill="none"
-              stroke={starboardHullColor}
-              strokeMiterlimit="1"
-              strokeWidth="4"
-            />
-            <text
-              x="500"
-              y="30"
-              stroke={starboardHullColor}
-              fill={starboardHullColor}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Starboard: {shipData.hull.hullStarboard} / {shipData.hull.hullStarboardMax}
-            </text>
-
-            {/* Stern Hull */}
-            <path
-              id="Stern"
-              d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740"
-              fill="none"
-              stroke={sternHullColor}
-              strokeMiterlimit="1"
-              strokeWidth="4"
-            />
-            <text
-              x="790"
-              y="120"
-              stroke={sternHullColor}
-              fill={sternHullColor}
-              textAnchor="right"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Stern: {shipData.hull.hullStern} / {shipData.hull.hullSternMax}
-            </text>
-            {/* Foresail */}
-            <rect
-              width="170"
-              height="50"
-              x="160"
-              y="95"
-              rx="5"
-              ry="5"
-              stroke="grey"
-              fill="none"
-            />
-            <circle
-              cx="300"
-              cy="120"
-              r="15"
-              fill={foresailColor}
-              stroke={foresailColor}
-              strokeWidth="1"
-            />
-            <text
-              x="175"
-              y="120"
-              stroke={foresailColor}
-              fill={foresailColor}
-              textAnchor="right"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Foresail: {shipData.movementSails.sailFore} / {shipData.movementSails.sailForeMax}
-            </text>
-            {/* Mainsail */}
-            <rect
-              width="170"
-              height="50"
-              x="360"
-              y="95"
-              rx="5"
-              ry="5"
-              stroke="grey"
-              fill="none"
-            />
-            <circle
-              cx="500"
-              cy="120"
-              r="15"
-              fill={mainsailColor}
-              stroke={mainsailColor}
-              strokeWidth="1"
-            />
-            <text
-              x="375"
-              y="120"
-              stroke={mainsailColor}
-              fill={mainsailColor}
-              textAnchor="right"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Mainsail: {shipData.movementSails.sailMain} / {shipData.movementSails.sailMainMax}
-            </text>
-            {/* Aft Sail */}
-            <rect
-              width="170"
-              height="50"
-              x="560"
-              y="95"
-              rx="5"
-              ry="5"
-              stroke="grey"
-              fill="none"
-            />
-            <circle
-              cx="700"
-              cy="120"
-              r="15"
-              fill={aftSailColor}
-              stroke={aftSailColor}
-              strokeWidth="1"
-            />
-            <text
-              x="575"
-              y="120"
-              stroke={aftSailColor}
-              fill={aftSailColor}
-              textAnchor="right"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Aft Sail: {shipData.movementSails.sailAft} / {shipData.movementSails.sailAftMax}
-            </text>
-            {/* Helm */}
-            <path
-              stroke="grey"
-              fill="none"
-              d="M745,85 h30 c0,0,5,0,5,5 v60 c0,0,0,5,5,5 h25 c0,0,5,0,5,5 v35 c0,0,0,5,-5,5 h-100 c0,0,-5,0,-5,-5 v-35 c0,0,0,-5,5,-5 h25 c0,0,5,0,5,-5 v-60 c0,0,0,-5,5,-5"
-            />
-            <rect
-              width="20"
-              height="50"
-              x="750"
-              y="95"
-              fill="none"
-              stroke={helmColor}
-              strokeWidth="4"
-            />
-            <line
-              id="helm"
-              x1="760"
-              y1="105"
-              x2="760"
-              y2="135"
-              stroke={helmColor}
-              strokeWidth="4"
-            />
-            <text
-              x="760"
-              y="177.5"
-              stroke={helmColor}
-              fill={helmColor}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="ship-svg-text"
-            >
-              Helm {shipData.helmControl.hitPoints} / {shipData.helmControl.maxHP}
-            </text>
-          </svg>
-        </div>
-      )
-    };
-
-    const boatswainActionsPanel = () => {
-      return (
-        <div className="role-actions-panel">
-          <h4>Actions Panel</h4>
-          <p>This is the Boatswain actions panel.</p>
-        </div>
+              {weapon.isLoaded ? "Yes" : "No"}
+            </span>
+          </p>
+        </>
       );
-    };
 
-    const masterGunnerPanel = () => {
 
-      const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
-      const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
-      const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
-      const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
-      const weaponsActionsPerTurn = shipData.soulsOnboard.weaponsCrew + 1;
+      return (
+        <Tooltip key={`${deck}-${side}-${i}`} title={<pre className="weapon-tooltip">{tooltipContent}</pre>} arrow placement="top">
+          <g
+            className="weapon-group"
+            style={{ cursor: "pointer" }}
+          >
+            <rect
+              x={xOffset - 5}
+              y={yOffset - 5}
+              width={width + 10}
+              height={height + 10}
+              fill="transparent"
+              pointerEvents="visible"
+              className="weapon-icon"
+            />
+            <svg
+              x={xOffset}
+              y={yOffset}
+              width={width}
+              height={height}
+              viewBox={viewBox}
+              xmlns="http://www.w3.org/2000/svg"
+              className="weapon-svg"
+            >
 
-      const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
-      const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
-      const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
-      const lowerDeckBallistaeStarboard = shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData.length;
-      const mainDeckCannonsPort = shipData.weapons.cannons.mainDeck.portSide.weaponData.length;
-      const mainDeckCannonsStarboard = shipData.weapons.cannons.mainDeck.starboardSide.weaponData.length;
-      const lowerDeckCannonsPort = shipData.weapons.cannons.lowerDeck.portSide.weaponData.length;
-      const lowerDeckCannonsStarboard = shipData.weapons.cannons.lowerDeck.starboardSide.weaponData.length;
-      const mainDeckMangonelsPort = shipData.weapons.mangonels.mainDeck.portSide.weaponData.length;
-      const mainDeckMangonelsStarboard = shipData.weapons.mangonels.mainDeck.starboardSide.weaponData.length;
-      const mainDeckTrebuchetsPort = shipData.weapons.trebuchets.mainDeck.portSide.weaponData.length;
-      const mainDeckTrebuchetsStarboard = shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData.length;
-      const totalBallistae = mainDeckBallistaePort + mainDeckBallistaeStarboard + lowerDeckBallistaePort + lowerDeckBallistaeStarboard;
-      const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
-      const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
-      const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
-
-      const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
-      const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
-      const cannonsNormalRange = shipData.weapons.cannons.statBlock.normalRange;
-      const cannonsMaxRange = shipData.weapons.cannons.statBlock.maxRange;
-      const mainDeckWeaponsPort = mainDeckBallistaePort + mainDeckCannonsPort + mainDeckMangonelsPort + mainDeckTrebuchetsPort;
-      const mainDeckWeaponsStarboard = mainDeckBallistaeStarboard + mainDeckCannonsStarboard + mainDeckMangonelsStarboard + mainDeckTrebuchetsStarboard;
-      const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
-      const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
-
-      const xOffsetTracker = {
-        main: { port: 0, starboard: 0 },
-        lower: { port: 0, starboard: 0 },
-      };
-
-      const renderWeapons = (weaponData, deck, side, type) => {
-        const isPort = side === "port";
-        const isMainDeck = deck === "main";
-        const initialOffset = (30 * (6 - (isMainDeck ? (isPort ? mainDeckWeaponsPort : mainDeckWeaponsStarboard) : (isPort ? lowerDeckWeaponsPort : lowerDeckWeaponsStarboard))));
-        const startX = 250 + initialOffset + xOffsetTracker[deck][side];
-        const startY = isMainDeck ? (isPort ? 162 : -7) : (isPort ? 162 : -7);
-        const iconSpacing = 80;
-        const width = 65;
-        const height = 80;
-        const viewBox = type === "cannon" ? "0 0 31 84" : "0 0 78 65";
-
-        const icons = weaponData.map((weapon, i) => {
-          const fillColor = weapon.isLoaded ? "lime" : "red";
-          const textColor = "white";
-          const xOffset = startX + i * iconSpacing;
-          const yOffset = startY;
-
-          return (
-            <g key={`${deck}-${side}-${i}`}>
-              <svg
-                x={xOffset}
-                y={yOffset}
-                width={width}
-                height={height}
-                viewBox={viewBox}
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {type === "ballista" && (
+              {type === "ballista" && (
+                <path
+                  id={`Ballista-${side}`}
+                  d={isPort ? "m.94,48.01c4.47.4,8.45,3.6,13.78,7.02,4.41,2.83,9.74,5.7,16.97,6.85l-1.21-8.47s0,0,0,0c-6.2-.68-10.84-2.07-14.86-3.48-4.41-1.55-8.11-3.13-12.21-3.74l30.85-26.59-1.74,31.07,2.06,14.32h7.91s2.06-14.31,2.06-14.31l-1.72-30.61,30.82,26.12c-4.1.6-7.8,2.19-12.2,3.74-4.02,1.41-8.66,2.81-14.86,3.48l-1.21,8.47c7.23-1.16,12.55-4.03,16.97-6.86,5.33-3.41,9.31-6.61,13.78-7.01.31-.01.62-.04.94-.04v-2.05h0s-34.4-29.16-34.4-29.16l-.94-16.76h-6.34s-.91,16.26-.91,16.26L.04,45.92s-.02,0-.04,0v.03s0,0,0,0h0s0,2.02,0,2.02c.32,0,.62.03.94.04Zm36.38-31.05l.9-.78,1.5,1.27v38.47s-1.2,4.81-1.2,4.81h0s0,0,0,0h0s-1.21-4.81-1.21-4.81V16.96Z" : "m76.1,16.99c-4.47-.4-8.45-3.6-13.78-7.02-4.41-2.83-9.74-5.7-16.97-6.85l1.21,8.47s0,0,0,0c6.2.68,10.84,2.07,14.86,3.48,4.41,1.55,8.11,3.13,12.21,3.74l-30.85,26.59,1.74-31.07-2.06-14.32h-7.91l-2.06,14.31,1.72,30.61L3.4,18.8c4.1-.6,7.8-2.19,12.2-3.74,4.02-1.41,8.66-2.81,14.86-3.48l1.21-8.47c-7.23,1.16-12.55,4.03-16.97,6.86-5.33,3.41-9.31,6.61-13.78,7.01-.31.01-.62.04-.94.04v2.05h0l34.4,29.16.94,16.76h6.34l.91-16.26,34.4-29.66s.02,0,.04,0v-.03s0,0,0,0h0s0-2.02,0-2.02c-.32,0-.62-.03-.94-.04Zm-36.38,31.05l-.9.78-1.5-1.27V9.07s1.2-4.81,1.2-4.81h0s0,0,0,0h0s1.21,4.81,1.21,4.81v38.96Z"}
+                  fill={fillColor}
+                  stroke="grey"
+                  strokeWidth="2"
+                />
+              )}
+              {type === "cannon" && (
+                <>
+                  <polyline
+                    id={`Base-${side}`}
+                    points={isPort ? "21.1 56.5 28.5 56.5 28.5 2.5 2.5 2.5 2.5 56.5 10.01 56.5" : "9.9 27.73 2.5 27.73 2.5 81.73 28.5 81.73 28.5 27.73 20.99 27.73"}
+                    fill="#000000"
+                    stroke="grey"
+                    strokeWidth="2"
+                  />
                   <path
-                    id={`Ballista-${side}`}
-                    d={isPort ? "m.94,48.01c4.47.4,8.45,3.6,13.78,7.02,4.41,2.83,9.74,5.7,16.97,6.85l-1.21-8.47s0,0,0,0c-6.2-.68-10.84-2.07-14.86-3.48-4.41-1.55-8.11-3.13-12.21-3.74l30.85-26.59-1.74,31.07,2.06,14.32h7.91s2.06-14.31,2.06-14.31l-1.72-30.61,30.82,26.12c-4.1.6-7.8,2.19-12.2,3.74-4.02,1.41-8.66,2.81-14.86,3.48l-1.21,8.47c7.23-1.16,12.55-4.03,16.97-6.86,5.33-3.41,9.31-6.61,13.78-7.01.31-.01.62-.04.94-.04v-2.05h0s-34.4-29.16-34.4-29.16l-.94-16.76h-6.34s-.91,16.26-.91,16.26L.04,45.92s-.02,0-.04,0v.03s0,0,0,0h0s0,2.02,0,2.02c.32,0,.62.03.94.04Zm36.38-31.05l.9-.78,1.5,1.27v38.47s-1.2,4.81-1.2,4.81h0s0,0,0,0h0s-1.21-4.81-1.21-4.81V16.96Z" : "m76.1,16.99c-4.47-.4-8.45-3.6-13.78-7.02-4.41-2.83-9.74-5.7-16.97-6.85l1.21,8.47s0,0,0,0c6.2.68,10.84,2.07,14.86,3.48,4.41,1.55,8.11,3.13,12.21,3.74l-30.85,26.59,1.74-31.07-2.06-14.32h-7.91l-2.06,14.31,1.72,30.61L3.4,18.8c4.1-.6,7.8-2.19,12.2-3.74,4.02-1.41,8.66-2.81,14.86-3.48l1.21-8.47c-7.23,1.16-12.55,4.03-16.97,6.86-5.33,3.41-9.31,6.61-13.78,7.01-.31.01-.62.04-.94.04v2.05h0l34.4,29.16.94,16.76h6.34l.91-16.26,34.4-29.66s.02,0,.04,0v-.03s0,0,0,0h0s0-2.02,0-2.02c-.32,0-.62-.03-.94-.04Zm-36.38,31.05l-.9.78-1.5-1.27V9.07s1.2-4.81,1.2-4.81h0s0,0,0,0h0s1.21,4.81,1.21,4.81v38.96Z"}
+                    id={`Cannon-${side}`}
+                    d={isPort ? "m8.78,19.02l.17.35.08,2.67c.04,1.47.1,3.54.13,4.61.26,8.66.29,10.17.24,10.26-.03.06-.04.13-.01.17.08.12.11.53.14,2.01.03,1.16.4,14.3.59,20.88.03,1.08.11,3.7.17,5.83.28,9.67.28,9.71.37,9.96.15.43.2,1.29.14,2.24-.03.48-.08.95-.12,1.06-.22.75.11,1.46.9,1.92,1.5.88,4.7,1.01,6.89.29.99-.33,1.66-.8,1.97-1.37.12-.22.13-.31.13-.92,0-.37-.05-.95-.1-1.28-.11-.75-.11-1.41,0-1.89.16-.71.19-1.23.25-3.81.03-1.43.13-5.45.22-8.94.09-3.48.22-8.32.28-10.76.06-2.43.16-6.2.22-8.38.06-2.17.12-4.62.13-5.44.02-.82.06-2.38.09-3.47.03-1.09.08-3.02.11-4.29.03-1.26.08-3.19.11-4.29.03-1.09.08-3.15.12-4.57.06-2.55.06-2.58.2-2.81.35-.61.52-1.57.41-2.28-.14-.89-.57-1.69-1.31-2.43-.55-.55-1.17-.97-1.86-1.26-.49-.2-1.38-.43-1.87-.48-.2-.02-.47-.04-.61-.06l-.24-.03.16-.14c.19-.16.4-.66.4-.96,0-.26-.13-.69-.28-.94-.07-.11-.24-.25-.4-.33-.91-.45-2.01.24-2.01,1.26,0,.4.11.68.35.94l.18.18h-.36c-1.1,0-2.35.28-3.22.72-1.69.85-2.9,2.57-3.03,4.3-.04.56.04,1.01.26,1.47Z" : "m22.22,65.21l-.17-.35-.08-2.67c-.04-1.47-.1-3.54-.13-4.61-.26-8.66-.29-10.17-.24-10.26.03-.06.04-.13.01-.17-.08-.12-.11-.53-.14-2.01-.03-1.16-.4-14.3-.59-20.88-.03-1.08-.11-3.7-.17-5.83-.28-9.67-.28-9.71-.37-9.96-.15-.43-.2-1.29-.14-2.24.03-.48.08-.95.12-1.06.22-.75-.11-1.46-.9-1.92-1.5-.88-4.7-1.01-6.89-.29-.99.33-1.66.8-1.97,1.37-.12.22-.13.31-.13.92,0,.37.05.95.1,1.28.11.75.11,1.41,0,1.89-.16.71-.19,1.23-.25,3.81-.03,1.43-.13,5.45-.22,8.94-.09,3.48-.22,8.32-.28,10.76-.06,2.43-.16,6.2-.22,8.38-.06,2.17-.12,4.62-.13,5.44-.02.82-.06,2.38-.09,3.47-.03,1.09-.08,3.02-.11,4.29-.03,1.26-.08,3.19-.11,4.29-.03,1.09-.08,3.15-.12,4.57-.06,2.55-.06,2.58-.2,2.81-.35.61-.52,1.57-.41,2.28.14.89.57,1.69,1.31,2.43.55.55,1.17.97,1.86,1.26.49.2,1.38.43,1.87.48.2.02.47.04.61.06l.24.03-.16.14c-.19.16-.4.66-.4.96,0,.26.13.69.28.94.07.11.24.25.4.33.91.45,2.01-.24,2.01-1.26,0-.4-.11-.68-.35-.94l-.18-.18h.36c1.1,0,2.35-.28,3.22-.72,1.69-.85,2.9-2.57,3.03-4.3.04-.56-.04-1.01-.26-1.47Z"}
                     fill={fillColor}
                     stroke="grey"
                     strokeWidth="2"
                   />
-                )}
-                {type === "cannon" && (
-                  <>
-                    <polyline
-                      id={`Base-${side}`}
-                      points={isPort ? "21.1 56.5 28.5 56.5 28.5 2.5 2.5 2.5 2.5 56.5 10.01 56.5" : "9.9 27.73 2.5 27.73 2.5 81.73 28.5 81.73 28.5 27.73 20.99 27.73"}
-                      fill="#000000"
-                      stroke="grey"
-                      strokeWidth="2"
-                    />
-                    <path
-                      id={`Cannon-${side}`}
-                      d={isPort ? "m8.78,19.02l.17.35.08,2.67c.04,1.47.1,3.54.13,4.61.26,8.66.29,10.17.24,10.26-.03.06-.04.13-.01.17.08.12.11.53.14,2.01.03,1.16.4,14.3.59,20.88.03,1.08.11,3.7.17,5.83.28,9.67.28,9.71.37,9.96.15.43.2,1.29.14,2.24-.03.48-.08.95-.12,1.06-.22.75.11,1.46.9,1.92,1.5.88,4.7,1.01,6.89.29.99-.33,1.66-.8,1.97-1.37.12-.22.13-.31.13-.92,0-.37-.05-.95-.1-1.28-.11-.75-.11-1.41,0-1.89.16-.71.19-1.23.25-3.81.03-1.43.13-5.45.22-8.94.09-3.48.22-8.32.28-10.76.06-2.43.16-6.2.22-8.38.06-2.17.12-4.62.13-5.44.02-.82.06-2.38.09-3.47.03-1.09.08-3.02.11-4.29.03-1.26.08-3.19.11-4.29.03-1.09.08-3.15.12-4.57.06-2.55.06-2.58.2-2.81.35-.61.52-1.57.41-2.28-.14-.89-.57-1.69-1.31-2.43-.55-.55-1.17-.97-1.86-1.26-.49-.2-1.38-.43-1.87-.48-.2-.02-.47-.04-.61-.06l-.24-.03.16-.14c.19-.16.4-.66.4-.96,0-.26-.13-.69-.28-.94-.07-.11-.24-.25-.4-.33-.91-.45-2.01.24-2.01,1.26,0,.4.11.68.35.94l.18.18h-.36c-1.1,0-2.35.28-3.22.72-1.69.85-2.9,2.57-3.03,4.3-.04.56.04,1.01.26,1.47Z" : "m22.22,65.21l-.17-.35-.08-2.67c-.04-1.47-.1-3.54-.13-4.61-.26-8.66-.29-10.17-.24-10.26.03-.06.04-.13.01-.17-.08-.12-.11-.53-.14-2.01-.03-1.16-.4-14.3-.59-20.88-.03-1.08-.11-3.7-.17-5.83-.28-9.67-.28-9.71-.37-9.96-.15-.43-.2-1.29-.14-2.24.03-.48.08-.95.12-1.06.22-.75-.11-1.46-.9-1.92-1.5-.88-4.7-1.01-6.89-.29-.99.33-1.66.8-1.97,1.37-.12.22-.13.31-.13.92,0,.37.05.95.1,1.28.11.75.11,1.41,0,1.89-.16.71-.19,1.23-.25,3.81-.03,1.43-.13,5.45-.22,8.94-.09,3.48-.22,8.32-.28,10.76-.06,2.43-.16,6.2-.22,8.38-.06,2.17-.12,4.62-.13,5.44-.02.82-.06,2.38-.09,3.47-.03,1.09-.08,3.02-.11,4.29-.03,1.26-.08,3.19-.11,4.29-.03,1.09-.08,3.15-.12,4.57-.06,2.55-.06,2.58-.2,2.81-.35.61-.52,1.57-.41,2.28.14.89.57,1.69,1.31,2.43.55.55,1.17.97,1.86,1.26.49.2,1.38.43,1.87.48.2.02.47.04.61.06l.24.03-.16.14c-.19.16-.4.66-.4.96,0,.26.13.69.28.94.07.11.24.25.4.33.91.45,2.01-.24,2.01-1.26,0-.4-.11-.68-.35-.94l-.18-.18h.36c1.1,0,2.35-.28,3.22-.72,1.69-.85,2.9-2.57,3.03-4.3.04-.56-.04-1.01-.26-1.47Z"}
-                      fill={fillColor}
-                      stroke="grey"
-                      strokeWidth="2"
-                    />
-                  </>
-                )}
+                </>
+              )}
 
-              </svg>
-              <text
-                x={xOffset + width / 2}
-                y={isPort ? (yOffset + height - 85) : (yOffset + height + 10)}
-                fill={textColor}
-                textAnchor="middle"
-                fontSize="10px"
-              >
-                {weapon.hp} / {type === "cannon" ? shipData.weapons.cannons.statBlock.maxHP : shipData.weapons.ballistae.statBlock.maxHP} HP
-              </text>
-            </g>
-          );
-        });
+            </svg>
+            <text
+              x={xOffset + width / 2}
+              y={isPort ? (yOffset + height - 85) : (yOffset + height + 10)}
+              fill={textColor}
+              textAnchor="middle"
+              fontSize="10px"
+            >
+              {weapon.hp} / {type === "cannon" ? shipData.weapons.cannons.statBlock.maxHP : shipData.weapons.ballistae.statBlock.maxHP} HP
+            </text>
+          </g>
+        </Tooltip >
+      );
+    });
 
+    xOffsetTracker[deck][side] += weaponData.length * iconSpacing;
 
-        xOffsetTracker[deck][side] += weaponData.length * iconSpacing;
-        console.log(xOffsetTracker);
+    return icons;
+  };
 
-        return icons;
-      };
-
-      return (
-        <div className="role-utility-panel">
-          <div className="master-gunner-panel">
-            <div className="master-gunner-panel-left">
-              <h3>
-                Ship Weapons
-              </h3>
-              <div>
-                <strong>Ballistae:</strong> {totalBallistae}
-              </div>
-              <div>
-                <strong>Cannons:</strong> {totalCannons}
-              </div>
-              <hr /> {/* -------------------------------------- */}
-              <h3>
-                Weapon Stats
-              </h3>
-              <h4>
-                Ballista
-              </h4>
-              <p>
-                <strong>Armor Class:</strong> {shipData.weapons.ballistae.statBlock.armorClass}
-              </p>
-              <p>
-                <strong>Range:</strong> {ballistaeNormalRange} / {ballistaeMaxRange} ft.
-              </p>
-              <p className="ammo-description">
-                <strong>Ballista Bolt:</strong> +{shipData.weapons.ballistae.ammo.boltStandard.toHit} to hit, {shipData.weapons.ballistae.ammo.boltStandard.damageDiceNumber}d{shipData.weapons.ballistae.ammo.boltStandard.damageDiceType} damage
-              </p>
-              <h4>
-                Cannon
-              </h4>
-              <p>
-                <strong>Armor Class:</strong> {shipData.weapons.cannons.statBlock.armorClass}
-              </p>
-              <p>
-                <strong>Range:</strong> {cannonsNormalRange} / {cannonsMaxRange} ft.
-              </p>
-              <p className="ammo-description">
-                <strong>Cannonball:</strong> +{shipData.weapons.cannons.ammo.cannonballStandard.toHit} to hit, {shipData.weapons.cannons.ammo.cannonballStandard.damageDiceNumber}d{shipData.weapons.cannons.ammo.cannonballStandard.damageDiceType} damage
-              </p>
-              <hr /> {/* -------------------------------------- */}
-              <h3>
-                Ammo Onboard
-              </h3>
-              <div>
-                <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
-              </div>
-              <div>
-                <strong>Cannonballs:</strong> {totalCannonballsStandard}
-              </div>
-              <hr /> {/* -------------------------------------- */}
-              <h3>
-                Weapons Crew
-              </h3>
-              <div>
-                <strong>Weapons Actions / Turn:</strong> {weaponsActionsPerTurn}
-              </div>
+  const masterGunnerPanel = () => {
+    return (
+      <div className="role-utility-panel">
+        <div className="master-gunner-panel">
+          <div className="master-gunner-panel-left">
+            <h3>
+              Ship Weapons
+            </h3>
+            <div>
+              <strong>Ballistae:</strong> {totalBallistae}
             </div>
-            <div className="master-gunner-panel-right">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
-                <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Main Deck</text>
-                {renderWeapons(shipData.weapons.ballistae.mainDeck.portSide.weaponData, "main", "port", "ballista")}
-                {renderWeapons(shipData.weapons.cannons.mainDeck.portSide.weaponData, "main", "port", "cannon")}
-                {renderWeapons(shipData.weapons.ballistae.mainDeck.starboardSide.weaponData, "main", "starboard", "ballista")}
-                {renderWeapons(shipData.weapons.cannons.mainDeck.starboardSide.weaponData, "main", "starboard", "cannon")}
-              </svg>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
-                <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-                <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Lower Deck</text>
-                {renderWeapons(shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData, "lower", "starboard", "ballista")}
-                {renderWeapons(shipData.weapons.cannons.lowerDeck.starboardSide.weaponData, "lower", "starboard", "cannon")}
-                {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
-                {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
-              </svg>
+            <div>
+              <strong>Cannons:</strong> {totalCannons}
+            </div>
+            <hr /> {/* -------------------------------------- */}
+            <h3>
+              Weapon Stats
+            </h3>
+            {ballistaWeaponStats()}
+            {cannonWeaponStats()}
+            <hr /> {/* -------------------------------------- */}
+            <h3>
+              Ammo Onboard
+            </h3>
+            <div>
+              <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
+            </div>
+            <div>
+              <strong>Cannonballs:</strong> {totalCannonballsStandard}
+            </div>
+            <hr /> {/* -------------------------------------- */}
+            <h3>
+              Weapons Crew
+            </h3>
+            <div>
+              <strong>Weapons Actions / Turn:</strong> {weaponsActionsPerTurn}
             </div>
           </div>
+          <div className="master-gunner-panel-right">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
+              <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Main Deck</text>
+              {renderWeapons(shipData.weapons.ballistae.mainDeck.portSide.weaponData, "main", "port", "ballista")}
+              {renderWeapons(shipData.weapons.cannons.mainDeck.portSide.weaponData, "main", "port", "cannon")}
+              {renderWeapons(shipData.weapons.ballistae.mainDeck.starboardSide.weaponData, "main", "starboard", "ballista")}
+              {renderWeapons(shipData.weapons.cannons.mainDeck.starboardSide.weaponData, "main", "starboard", "cannon")}
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
+              <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+              <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Lower Deck</text>
+              {renderWeapons(shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData, "lower", "starboard", "ballista")}
+              {renderWeapons(shipData.weapons.cannons.lowerDeck.starboardSide.weaponData, "lower", "starboard", "cannon")}
+              {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
+              {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
+            </svg>
+          </div>
         </div>
-      );
-    };
+      </div>
+    );
+  };
 
-
-
+  const shipDeploymentDashboard = () => {
     return (
       <div className="card">
         <div className="ship-deployments">
@@ -1167,73 +1312,6 @@ const ShipStats = () => {
     );
   };
 
-
-
-  const commandDiceCard = () => {
-    //TODO: MAKE THE BUTTON POP UP A CONFIRMATION MODAL AND THEN HAVE IT SUBTRACT A COMMAND DIE FROM FIREBASE ("Are you sure you want to use a command die? You will have x remaining")
-    //TODO: MAKE THE FORMATTING OF THE BUTTON BETTER
-    return (
-      <div className="card command-dice-card">
-        <h3>Command Dice</h3>
-        <p><strong>Type:</strong> d{shipData.shipDice.commandDiceType}</p>
-        <p><strong>Current Command Dice:</strong> {shipData.shipDice.commandDiceLeft} / {shipData.shipDice.commandDiceMax}</p>
-        <button className="centered-in-card">Roll Command Die!</button>
-      </div>
-    )
-  }
-
-  const hullDiceCard = () => {
-    //TODO: SAME AS COMMAND DICE CARD
-    return (
-      <div className="card hull-dice-card">
-        <h3>Hull Dice</h3>
-        <p><strong>Type:</strong> d{shipData.shipDice.hullDiceType}</p>
-        <p><strong>Current Hull Dice:</strong> {shipData.shipDice.hullDiceLeft} / {shipData.shipDice.hullDiceMax}</p>
-        <button className="centered-in-card">Roll Hull Die!</button>
-      </div>
-    )
-  }
-
-  const characterDataCard = () => {
-    return (
-      <div className="card character-data-card">
-        {characterData ? (
-          <>
-            {/* Character Name as Header */}
-            <h3 className="character-name-header">{characterData.name}</h3>
-
-            {/* Grid with Two Columns */}
-
-            {/* Left Column */}
-            <div className="character-info">
-              <div><strong>Deployment Role:</strong> {activeRole}</div>
-              <div><strong>Deployment Rank:</strong> {roles.find((role) => role.name === activeRole)?.rank || 'Unknown'}</div>
-            </div>
-            <hr />
-            {/* Right Column */}
-            <div className="character-scores-grid">
-              {Object.entries(characterData.stats).map(([ability, score]) => {
-                const modifier = Math.floor((score - 10) / 2);
-                return (
-                  <div key={ability} className="character-score-card">
-                    <p className="character-score-name">{ability}</p>
-                    <p className="character-score-modifier">
-                      {modifier >= 0 ? '+' : ''}{modifier}
-                    </p>
-                    <p className="character-score-value">{score}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-          </>
-        ) : (
-          <p>Loading character data...</p>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className="sheet-container">
       {/* Top Bar */}
@@ -1285,4 +1363,4 @@ const ShipStats = () => {
   );
 };
 
-export default ShipStats;
+export default ShipDashboard;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -12,6 +12,33 @@ const ShipDashboard = () => {
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
   const [orders, setOrders] = useState([]); // Empty orders list
+
+  const setCookie = (name, value, days = 1) => {
+    const date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${JSON.stringify(value)};expires=${date.toUTCString()};path=/`;
+  };
+
+  const getCookie = (name) => {
+    const cookieArr = document.cookie.split(';');
+    for (let cookie of cookieArr) {
+      const [key, val] = cookie.trim().split('=');
+      if (key === name) {
+        return JSON.parse(val);
+      }
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    const cookieKey = 'shipWeaponStates';
+    const initialWeaponStates = getCookie(cookieKey) || {};
+
+    console.log('Loaded weapon states from cookie:', initialWeaponStates);
+    // You could integrate this into your UI if needed
+  }, []);
+
+
 
 
   // Real-time listener for Firestore updates
@@ -48,7 +75,7 @@ const ShipDashboard = () => {
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
-  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 1 : 0;
+  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 5 : 0;
   const [actionsRemaining, setActionsRemaining] = useState(weaponsActionsPerTurn);
 
   useEffect(() => {
@@ -1090,7 +1117,16 @@ const ShipDashboard = () => {
           <g
             className="weapon-group"
             style={{ cursor: "pointer" }}
+            onClick={() =>
+              addOrder(
+                weapon.isLoaded ? "Fire" : "Reload",
+                type === "cannon" ? "Cannon" : "Ballista",
+                `${deck.charAt(0).toUpperCase() + deck.slice(1)} Deck ${side.charAt(0).toUpperCase() + side.slice(1)}`,
+                i // Pass the weapon index
+              )
+            }
           >
+
             <rect
               x={xOffset - 5}
               y={yOffset - 5}
@@ -1158,6 +1194,84 @@ const ShipDashboard = () => {
     return icons;
   };
 
+  const addOrder = (action, weaponType, location, weaponIndex) => {
+    const newOrder = { action, weaponType, location, weaponIndex };
+    setOrders([...orders, newOrder]);
+    console.log("Adding a new order:", { action, weaponType, location, weaponIndex });
+    console.log("Updated orders array:", [...orders, { action, weaponType, location, weaponIndex }]);
+
+  };
+
+
+  const removeOrder = (index) => {
+    const removedOrder = orders[index];
+    setOrders((prevOrders) => prevOrders.filter((_, i) => i !== index));
+    setActionsRemaining((prev) => prev + 1);
+  };
+
+
+  const executeOrders = () => {
+    const cookieKey = 'shipWeaponStates';
+    const currentWeaponStates = getCookie(cookieKey) || {};
+
+    orders.forEach((order) => {
+      const { weaponIndex, location, weaponType, action } = order;
+
+      // Derive unique weapon key for cookies
+      const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`;
+
+      console.log(`Processing ${action} order for ${weaponKey}`);
+
+      // Update state based on action
+      if (action === 'Fire') {
+        currentWeaponStates[weaponKey] = false; // Mark as unloaded
+      } else if (action === 'Reload') {
+        currentWeaponStates[weaponKey] = true; // Mark as loaded
+      }
+    });
+
+    // Save updated states to cookie
+    setCookie(cookieKey, currentWeaponStates);
+    console.log('Updated weapon states:', currentWeaponStates);
+
+    // Generate modal message
+    const modalMessage = orders.map((order) => {
+      const { weaponType, location, weaponIndex, action } = order;
+      const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`;
+      const isLoaded = currentWeaponStates[weaponKey];
+      const weaponData =
+        weaponType === 'Cannon'
+          ? shipData.weapons.cannons.statBlock
+          : shipData.weapons.ballistae.statBlock;
+
+      return `${action} ${weaponType} on ${location}, Weapon #${weaponIndex + 1}
+        Roll To-Hit: d20 + ${weaponData.toHit}
+        Damage: ${weaponData.damageDiceNumber}d${weaponData.damageDiceType} ${weaponData.damageType}`;
+    });
+
+    // Show modal
+    alert(`Orders executed successfully:\n\n${modalMessage.join('\n\n')}`);
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   const masterGunnerPanel = () => {
@@ -1221,6 +1335,22 @@ const ShipDashboard = () => {
               {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
               {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
             </svg>
+            <div className="master-gunner-orders-panel">
+              <div>
+                <div><strong>Actions Remaining:</strong> {actionsRemaining} / {weaponsActionsPerTurn}</div>
+                <ul>
+                  {orders.map((order, index) => (
+                    <li key={index}>
+                      {order.action} {order.weaponType} on {order.location}
+                      <button onClick={() => removeOrder(index)}>❌</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button onClick={executeOrders} disabled={orders.length === 0}>
+                Give the Order!
+              </button>
+            </div>
           </div>
         </div>
       </div>

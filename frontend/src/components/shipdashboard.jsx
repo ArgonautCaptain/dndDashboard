@@ -58,8 +58,8 @@ const ShipDashboard = () => {
           { name: 'Quartermaster', id: '45298843', roleIdentifier: 'quartermaster' },
           { name: 'Lookout', id: '135427111', roleIdentifier: 'lookout' },
           { name: 'Master Gunner', id: '135431531', roleIdentifier: 'masterGunner' },
-          { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
-          { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' },
+/*           { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
+          { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' }, */
         ].map(role => ({
           ...role,
           rank: data.officerRanks[role.roleIdentifier] || 1, // Fallback to 1 if no rank found
@@ -75,7 +75,7 @@ const ShipDashboard = () => {
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
-  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 5 : 0;
+  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 1 : 0;
   const [actionsRemaining, setActionsRemaining] = useState(weaponsActionsPerTurn);
 
   useEffect(() => {
@@ -110,7 +110,7 @@ const ShipDashboard = () => {
         <h3>Command Dice</h3>
         <p><strong>Type:</strong> d{shipData.shipDice.commandDiceType}</p>
         <p><strong>Current Command Dice:</strong> {shipData.shipDice.commandDiceLeft} / {shipData.shipDice.commandDiceMax}</p>
-        <button className="centered-in-card">Roll Command Die!</button>
+        {/* <button className="centered-in-card">Roll Command Die!</button> */}
       </div>
     )
   }
@@ -122,7 +122,7 @@ const ShipDashboard = () => {
         <h3>Hull Dice</h3>
         <p><strong>Type:</strong> d{shipData.shipDice.hullDiceType}</p>
         <p><strong>Current Hull Dice:</strong> {shipData.shipDice.hullDiceLeft} / {shipData.shipDice.hullDiceMax}</p>
-        <button className="centered-in-card">Roll Hull Die!</button>
+        {/* <button className="centered-in-card">Roll Hull Die!</button> */}
       </div>
     )
   }
@@ -958,6 +958,7 @@ const ShipDashboard = () => {
       <div className="role-actions-panel">
         <h4>Actions Panel</h4>
         <p>This is the Boatswain actions panel.</p>
+        <h1>Coming Soon</h1>
       </div>
     );
   };
@@ -1412,6 +1413,7 @@ const ShipDashboard = () => {
                   ) : (
                     <p>This is the {getRolePanelTitle(activeRole)} control panel.</p>
                   )}
+                  <h1>Coming Soon</h1>
                 </>
               )}
               {activeRoleTab === 1 && (
@@ -1421,6 +1423,7 @@ const ShipDashboard = () => {
                   ) : (
                     <p>This is the {activeRole} actions panel.</p>
                   )}
+                  <h1>Coming Soon</h1>
                 </>
               )}
               {activeRoleTab === 0 && (

@@ -5,11 +5,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
 import { Box } from '@mui/material';
 import deploymentFeatures from '../data/deploymentFeatures.json'
-import { useShipData } from '../data/shipData';
 
 
 const ShipDashboard = () => {
-  const { shipData, setShipData } = useShipData();
+  const [shipData, setShipData] = useState(null);
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
   const [orders, setOrders] = useState([]); // Empty orders list
@@ -39,6 +38,9 @@ const ShipDashboard = () => {
     // You could integrate this into your UI if needed
   }, []);
 
+
+
+
   // Real-time listener for Firestore updates
   useEffect(() => {
     const shipRef = doc(db, 'ships', 'scarlet-fury');
@@ -56,8 +58,8 @@ const ShipDashboard = () => {
           { name: 'Quartermaster', id: '45298843', roleIdentifier: 'quartermaster' },
           { name: 'Lookout', id: '135427111', roleIdentifier: 'lookout' },
           { name: 'Master Gunner', id: '135431531', roleIdentifier: 'masterGunner' },
-          /*           { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
-                    { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' }, */
+/*           { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
+          { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' }, */
         ].map(role => ({
           ...role,
           rank: data.officerRanks[role.roleIdentifier] || 1, // Fallback to 1 if no rank found

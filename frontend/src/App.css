@@ -23,6 +23,16 @@ a:hover {
   color: #535bf2;
 }
 
+::-moz-selection { /* Code for Firefox */
+  color: white;
+  background: tomato;
+}
+
+::selection {
+  color: white;
+  background: tomato;
+}
+
 body {
   margin: 0;
   height: 100vh;
@@ -35,6 +45,10 @@ body {
   background-position: right center;
   background-size: auto 100%; /* Maintain aspect ratio and stretch vertically */
   background-attachment: fixed; /* Keep the image fixed in place */
+}
+
+input {
+  font-family: 'Roboto Condensed', sans-serif;
 }
 
 /* Persistent Header */
@@ -677,4 +691,109 @@ button {
   flex-direction: column;
   align-items: flex-start; /* Align text to the top-left */
   justify-content: flex-start; /* Ensure content starts at the top */
+}
+
+/* Admin Panel CSS */
+
+.admin-panel {
+  padding: 20px;
+}
+
+.admin-card {
+  position: relative; /* Ensures child elements are positioned relative to this */
+  background: #222;
+  color: white;
+  padding: 15px;
+  border: solid 1px #fff;
+  border-radius: 5px;
+  width: calc((100vw / 6) - 65px);
+}
+
+.weapons-info-admin-card {
+  width: calc((300vw / 6) - 65px);
+}
+
+.ship-info-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.weapon-categories-container {
+  display: flex;
+  gap: 20px; /* Spacing between weapon categories */
+}
+
+.weapon-category {
+  flex: 1 1;
+  background: rgba(50, 50, 50, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 5px 0;
+}
+
+.clickable-stat {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clickable-stat:hover {
+  color: gold;
+}
+
+.stat-edit-container {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border: solid 2px red;
+  border-radius: 10px;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  z-index: 1000;
+}
+
+.stat-edit-container input {
+  width: 100px; /* Increase width */
+  height: 50px; /* Increase height */
+  font-size: 20px; /* Larger text */
+  padding: 5px; /* Add padding */
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  appearance: textfield; /* Ensure textfield-like appearance */
+  position: relative; /* Needed for positioning custom arrows */
+  font-size: 2em;
+}
+
+/* Target number input spin buttons */
+.stat-edit-container input::-webkit-inner-spin-button,
+.stat-edit-container input::-webkit-outer-spin-button {
+  opacity: 1 !important;
+  height: 48px; /* Make them taller */
+  cursor: pointer; /* Pointer cursor for better UX */
+}
+
+
+
+.stat-edit-container button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.stat-edit-container h3, p {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

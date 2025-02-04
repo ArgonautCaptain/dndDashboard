@@ -1,18 +1,28 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 
 // Create Context
 const ShipDataContext = createContext();
 
 // Provider Component
 export const ShipDataProvider = ({ children }) => {
-  const [shipDataSaved, setShipDataSaved] = useState(null);
+  const [shipData, setShipData] = useState(null);
 
-  const setShipData = (newData) => {
-    setShipDataSaved(newData);
-    return shipDataSaved;
-  };
+  // Fetch ship data from Firestore when provider loads
+  useEffect(() => {
+    const shipRef = doc(db, 'ships', 'scarlet-fury');
 
-  const shipData = shipDataSaved;
+    const unsubscribe = onSnapshot(shipRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setShipData(snapshot.data());
+      } else {
+        console.error('No ship data found in Firestore.');
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
 
   return (
     <ShipDataContext.Provider value={{ shipData, setShipData }}>

@@ -9,11 +9,12 @@ const AdminPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const inputRef = useRef(null);
   const [selectedStat, setSelectedStat] = useState(null);
   const [newStatValue, setNewStatValue] = useState("");
   const [selectedHullStat, setSelectedHullStat] = useState(null);
   const [newHullValue, setNewHullValue] = useState("");
-  const inputRef = useRef(null);
+
 
   const correctPassword = 'KeithBaker';
 
@@ -131,6 +132,8 @@ const AdminPanel = () => {
       </div>
     );
   };
+
+  //weapons score card functions
 
   const shipWeaponsCard = () => {
     return (
@@ -257,6 +260,8 @@ const AdminPanel = () => {
     );
   };
 
+  //movement card functions
+
   const shipMovementCard = () => {
     return (
       <div className="admin-card movement-info-admin-card">
@@ -270,6 +275,8 @@ const AdminPanel = () => {
       </div>
     )
   };
+
+  //crew card functions
 
   const shipCrewCard = () => {
     return (
@@ -285,6 +292,8 @@ const AdminPanel = () => {
       </div>
     )
   };
+
+  //dice card functions
 
   const shipDiceCard = () => {
     return (

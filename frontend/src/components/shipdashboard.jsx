@@ -516,9 +516,9 @@ const ShipDashboard = () => {
       return 'red'; // Low speed
     };
 
-    const sailsCurrentHP = shipData.movementSails.sailFore + shipData.movementSails.sailMain + shipData.movementSails.sailAft;
+    const sailsCurrentHP = shipData.movementSails.sailForeHP + shipData.movementSails.sailMainHP + shipData.movementSails.sailAftHP;
 
-    const sailsMaxHP = shipData.movementSails.sailForeMax + shipData.movementSails.sailMainMax + shipData.movementSails.sailAftMax;
+    const sailsMaxHP = shipData.movementSails.sailForeMaxHP + shipData.movementSails.sailMainMaxHP + shipData.movementSails.sailAftMaxHP;
 
     return (
       <div className="card sails-card">
@@ -559,29 +559,6 @@ const ShipDashboard = () => {
             }}
           >
             {calculatedSpeed(shipData.movementSails.speed, sailsCurrentHP, sailsMaxHP)} ft.
-          </span>
-        </p>
-        <p>
-          <strong>༄ With Wind:</strong>{' '}
-          <span
-            style={{
-              color: getSpeedColor(
-                calculatedSpeed(shipData.movementSails.speedModifiers.withWind, sailsCurrentHP, sailsMaxHP)
-              ),
-            }}
-          >
-            {calculatedSpeed(shipData.movementSails.speedModifiers.withWind, sailsCurrentHP, sailsMaxHP)} ft.
-          </span>
-
-          <strong>| ࿓ Into Wind:</strong>{' '}
-          <span
-            style={{
-              color: getSpeedColor(
-                calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, sailsCurrentHP, sailsMaxHP)
-              ),
-            }}
-          >
-            {calculatedSpeed(shipData.movementSails.speedModifiers.intoWind, sailsCurrentHP, sailsMaxHP)} ft.
           </span>
         </p>
       </div>
@@ -723,9 +700,9 @@ const ShipDashboard = () => {
     const sternHullColor = getDamageColor(shipData.hull.hullStern, shipData.hull.hullSternMax);
 
 
-    const foresailColor = getDamageColor(shipData.movementSails.sailFore, shipData.movementSails.sailForeMax);
-    const mainsailColor = getDamageColor(shipData.movementSails.sailMain, shipData.movementSails.sailMainMax);
-    const aftSailColor = getDamageColor(shipData.movementSails.sailAft, shipData.movementSails.sailAftMax);
+    const foresailColor = getDamageColor(shipData.movementSails.sailForeHP, shipData.movementSails.sailForeMaxHP);
+    const mainsailColor = getDamageColor(shipData.movementSails.sailMainHP, shipData.movementSails.sailMainMaxHP);
+    const aftSailColor = getDamageColor(shipData.movementSails.sailAftHP, shipData.movementSails.sailAftMaxHP);
 
     const helmColor = getDamageColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP);
 
@@ -856,7 +833,7 @@ const ShipDashboard = () => {
             dominantBaseline="middle"
             className="ship-svg-text"
           >
-            Foresail: {shipData.movementSails.sailFore} / {shipData.movementSails.sailForeMax}
+            Foresail: {shipData.movementSails.sailForeHP} / {shipData.movementSails.sailForeMaxHP}
           </text>
           {/* Mainsail */}
           <rect
@@ -886,7 +863,7 @@ const ShipDashboard = () => {
             dominantBaseline="middle"
             className="ship-svg-text"
           >
-            Mainsail: {shipData.movementSails.sailMain} / {shipData.movementSails.sailMainMax}
+            Mainsail: {shipData.movementSails.sailMainHP} / {shipData.movementSails.sailMainMaxHP}
           </text>
           {/* Aft Sail */}
           <rect
@@ -916,7 +893,7 @@ const ShipDashboard = () => {
             dominantBaseline="middle"
             className="ship-svg-text"
           >
-            Aft Sail: {shipData.movementSails.sailAft} / {shipData.movementSails.sailAftMax}
+            Aft Sail: {shipData.movementSails.sailAftHP} / {shipData.movementSails.sailAftMaxHP}
           </text>
           {/* Helm */}
           <path

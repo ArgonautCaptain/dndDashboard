@@ -699,6 +699,35 @@ button {
   padding: 20px;
 }
 
+.dm-panel-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+}
+
+.dm-panel-left-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dm-panel-center-container {
+  flex-grow: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dm-panel-right-container {
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .admin-card {
   position: relative; /* Ensures child elements are positioned relative to this */
   background: #222;
@@ -706,26 +735,15 @@ button {
   padding: 15px;
   border: solid 1px #fff;
   border-radius: 5px;
-  width: calc((100vw / 6) - 65px);
-}
-
-.weapons-info-admin-card {
-  width: calc((300vw / 6) - 65px);
-}
-
-.ship-info-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
 }
 
 .weapon-categories-container {
   display: flex;
-  gap: 20px; /* Spacing between weapon categories */
+  gap: 20px;
 }
 
 .weapon-category {
-  flex: 1 1;
+  flex-grow: 1;
   background: rgba(50, 50, 50, 0.8);
   padding: 10px;
   border-radius: 5px;
@@ -817,4 +835,8 @@ ul li {
 
 .weapons-info-admin-card h3 {
   text-decoration: underline;
+}
+
+.sails-data {
+  margin-left: 15px;
 }

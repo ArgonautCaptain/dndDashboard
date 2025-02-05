@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useShipData } from '../data/shipData';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { doc, updateDoc } from 'firebase/firestore';
@@ -170,11 +170,12 @@ const AdminPanel = () => {
 
 
   const shipWeaponsCard = () => {
+/*
     const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
     const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
     const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
     const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
-
+ */
     const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
     const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
     const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
@@ -197,7 +198,7 @@ const AdminPanel = () => {
     const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
     const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
     const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
-
+/*
     const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
     const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
     const cannonsNormalRange = shipData.weapons.cannons.statBlock.normalRange;
@@ -206,7 +207,7 @@ const AdminPanel = () => {
     const mainDeckWeaponsStarboard = mainDeckBallistaeStarboard + mainDeckCannonsStarboard + mainDeckMangonelsStarboard + mainDeckTrebuchetsStarboard;
     const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
     const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
-
+ */
     return (
       <div className="admin-card weapons-info-admin-card">
         <h1>Ship Weapons Info</h1>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
 
 const Map = () => {
-  const [zoom, setZoom] = useState(3);
+  const [zoom, setZoom] = useState(7);
   const [center, setCenter] = useState({ lat: -79.4, lng: -17.2 }); // Default center coordinates
 
   const MapEventHandler = () => {
@@ -21,13 +21,9 @@ const Map = () => {
 
   return (
     <div className="map-container">
-{/*       <div style={{ marginBottom: '10px', padding: '5px', background: '#000', color: '#fff' }}>
-        <p>Zoom Level: {zoom}</p>
-        <p>Center: {`Lat: ${center.lat}, Lng: ${center.lng}`}</p>
-      </div> */}
       <MapContainer
-        center={[-79.4, -17.2]} // Default map center coordinates
-        zoom={7} // Default zoom level
+        center={center} // Default map center coordinates
+        zoom={zoom} // Default zoom level
         minZoom={3}
         maxZoom={7} // Adjust based on your available zoom levels
         style={{ height: '100vh', width: '100%', backgroundColor: '#00000000' }}

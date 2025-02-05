@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -58,8 +59,8 @@ const ShipDashboard = () => {
           { name: 'Quartermaster', id: '45298843', roleIdentifier: 'quartermaster' },
           { name: 'Lookout', id: '135427111', roleIdentifier: 'lookout' },
           { name: 'Master Gunner', id: '135431531', roleIdentifier: 'masterGunner' },
-/*           { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
-          { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' }, */
+          /*           { name: 'Captain', id: '136228181', roleIdentifier: 'captain' },
+                    { name: 'Personnel Officer', id: '136437805', roleIdentifier: 'personnelOfficer' }, */
         ].map(role => ({
           ...role,
           rank: data.officerRanks[role.roleIdentifier] || 1, // Fallback to 1 if no rank found
@@ -249,6 +250,10 @@ const ShipDashboard = () => {
           <text x="100" y="9" fontSize="1" textAnchor="middle" fill="black">10</text>
         </svg>
       );
+    };
+
+    LineGraphWithGradient.propTypes = {
+      morale: PropTypes.number.isRequired,
     };
 
     return (
@@ -969,9 +974,10 @@ const ShipDashboard = () => {
 
   const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
   const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
-  const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
-  const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
-
+  /*
+    const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
+    const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
+   */
   const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
   const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
   const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
@@ -986,8 +992,10 @@ const ShipDashboard = () => {
   const mainDeckTrebuchetsStarboard = shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData.length;
   const totalBallistae = mainDeckBallistaePort + mainDeckBallistaeStarboard + lowerDeckBallistaePort + lowerDeckBallistaeStarboard;
   const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
-  const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
-  const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
+  /*
+    const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
+    const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
+    */
 
   const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
   const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
@@ -1205,7 +1213,7 @@ const ShipDashboard = () => {
 
 
   const removeOrder = (index) => {
-    const removedOrder = orders[index];
+    /*     const removedOrder = orders[index]; */
     setOrders((prevOrders) => prevOrders.filter((_, i) => i !== index));
     setActionsRemaining((prev) => prev + 1);
   };
@@ -1238,8 +1246,8 @@ const ShipDashboard = () => {
     // Generate modal message
     const modalMessage = orders.map((order) => {
       const { weaponType, location, weaponIndex, action } = order;
-      const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`;
-      const isLoaded = currentWeaponStates[weaponKey];
+      /*       const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`; */
+      /*       const isLoaded = currentWeaponStates[weaponKey]; */
       const weaponData =
         weaponType === 'Cannon'
           ? shipData.weapons.cannons.statBlock

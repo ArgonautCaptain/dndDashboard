@@ -681,6 +681,10 @@ const AdminPanel = () => {
                         type="number"
                         value={newWeaponValue}
                         onChange={(e) => setNewWeaponValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSubmitWeaponUpdate(); // Submit on Enter key
+                          if (e.key === 'Escape') setSelectedWeaponStat(null); // Cancel on Escape key
+                        }}
                       />
                     </p>
                     <p>
@@ -708,6 +712,10 @@ const AdminPanel = () => {
                         type="number"
                         value={newAmmoValue}
                         onChange={(e) => setNewAmmoValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSubmitAmmoUpdate(); // Submit on Enter key
+                          if (e.key === 'Escape') setSelectedAmmoValue(null); // Cancel on Escape key
+                        }}
                       />
                     </p>
                     <p>
@@ -743,6 +751,10 @@ const AdminPanel = () => {
                           type="number"
                           value={newEquippedWeaponStatus}
                           onChange={(e) => setNewEquippedWeaponStatus(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSubmitEquippedWeaponStatusUpdate(); // Submit on Enter key
+                            if (e.key === 'Escape') setSelectedEquippedWeaponStatus(null); // Cancel on Escape key
+                          }}
                         />
                       )}
                     </p>
@@ -845,6 +857,10 @@ const AdminPanel = () => {
                 type="number"
                 value={newHullValue}
                 onChange={(e) => setNewHullValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSubmitHullUpdate(); // Submit on Enter key
+                  if (e.key === 'Escape') setSelectedHullStat(null); // Cancel on Escape key
+                }}
               />
             </p>
             <p>

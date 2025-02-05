@@ -1085,8 +1085,9 @@ const AdminPanel = () => {
   //movement card functions
 
   const shipMovementCard = () => {
-    const sailsCurrentHP = shipData.movementSails.sailForeHP + shipData.movementSails.sailMainHP + shipData.movementSails.sailAft;
-    const sailsMaxHP = shipData.movementSails.sailForeMaxHP + shipData.movementSails.sailMainMaxHP + shipData.movementSails.sailAftMax;
+    const sailsCurrentHP = shipData.movementSails.sailForeHP + shipData.movementSails.sailMainHP + shipData.movementSails.sailAftHP;
+    const sailsMaxHP = shipData.movementSails.sailForeMaxHP + shipData.movementSails.sailMainMaxHP + shipData.movementSails.sailAftMaxHP;
+
     const calculatedSpeed = (baseSpeed, currentHP, maxHP) => {
       if (currentHP === 0) {
         return 0; // If sails HP is 0, speed is 0
@@ -1196,12 +1197,12 @@ const AdminPanel = () => {
         </p>
         <p className="sails-data">
           {"Aft Sails: "}
-          <span className="clickable-stat" onClick={() => handleMovementStatClick("movementSails", "sailAft", shipData.movementSails.sailAftHP)}>
+          <span className="clickable-stat" onClick={() => handleMovementStatClick("movementSails", "sailAftHP", shipData.movementSails.sailAftHP)}>
             {shipData.movementSails.sailAftHP}
           </span>
           {" / "}
-          <span className="clickable-stat" onClick={() => handleMovementStatClick("movementSails", "sailAftMax", shipData.movementSails.sailAftMaxHP)}>
-            {shipData.movementSails.sailAftMax}
+          <span className="clickable-stat" onClick={() => handleMovementStatClick("movementSails", "sailAftMaxHP", shipData.movementSails.sailAftMaxHP)}>
+            {shipData.movementSails.sailAftMaxHP}
           </span>
         </p>
         <p><strong>Base Sailing Speed: </strong>

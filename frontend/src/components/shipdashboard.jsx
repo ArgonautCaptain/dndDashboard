@@ -1254,27 +1254,6 @@ const ShipDashboard = () => {
     alert(`Orders executed successfully:\n\n${modalMessage.join('\n\n')}`);
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const masterGunnerPanel = () => {
     return (
       <div className="role-utility-panel">

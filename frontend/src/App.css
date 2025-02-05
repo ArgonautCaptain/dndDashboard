@@ -741,6 +741,7 @@ ul li {
 }
 
 .clickable-stat {
+  color: tomato;
   cursor: pointer;
   transition: color 0.2s;
 }
@@ -765,6 +766,12 @@ ul li {
   z-index: 1000;
 }
 
+.weapon-stat-edit-container {
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%);
+}
+
 .stat-edit-container input {
   width: 100px; /* Increase width */
   height: 50px; /* Increase height */
@@ -786,8 +793,6 @@ ul li {
   cursor: pointer; /* Pointer cursor for better UX */
 }
 
-
-
 .stat-edit-container button {
   margin-left: 5px;
   margin-right: 5px;
@@ -796,4 +801,20 @@ ul li {
 .stat-edit-container h3, p {
   margin-top: 10px;
   margin-bottom: 10px;
+}
+
+.equipped-weapon-item, .equipped-ammo-item{
+  margin-left: 15px;
+}
+
+.equipped-weapon-sub-item {
+  margin-left: 30px;
+}
+
+.admin-card h2 {
+  text-decoration: underline;
+}
+
+.weapons-info-admin-card h3 {
+  text-decoration: underline;
 }

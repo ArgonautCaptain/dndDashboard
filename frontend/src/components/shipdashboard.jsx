@@ -1398,9 +1398,11 @@ const ShipDashboard = () => {
                   ) : activeRole === 'Master Gunner' ? (
                     masterGunnerPanel()
                   ) : (
+                    <>
                     <p>This is the {getRolePanelTitle(activeRole)} control panel.</p>
+                    <h1>Coming Soon</h1>
+                    </>
                   )}
-                  <h1>Coming Soon</h1>
                 </>
               )}
               {activeRoleTab === 1 && (

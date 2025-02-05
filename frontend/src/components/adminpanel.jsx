@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useShipData } from '../data/shipData';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const AdminPanel = () => {
@@ -16,6 +16,10 @@ const AdminPanel = () => {
   const [newHullValue, setNewHullValue] = useState("");
   const [selectedWeaponStat, setSelectedWeaponStat] = useState(null);
   const [newWeaponValue, setNewWeaponValue] = useState("");
+  const [selectedAmmoValue, setSelectedAmmoValue] = useState(null);
+  const [newAmmoValue, setNewAmmoValue] = useState("");
+  const [selectedEquippedWeaponStatus, setSelectedEquippedWeaponStatus] = useState(null);
+  const [newEquippedWeaponStatus, setNewEquippedWeaponStatus] = useState("");
 
 
   const correctPassword = 'KeithBaker';
@@ -135,6 +139,8 @@ const AdminPanel = () => {
 
   const handleWeaponStatClick = (statKey, weaponType) => {
     setSelectedWeaponStat({ statKey, weaponType });
+    setSelectedAmmoValue(null); // Clear ammo selection
+    setSelectedEquippedWeaponStatus(null); // Clear equipped weapon status selection
     setNewWeaponValue(shipData.weapons[weaponType].statBlock[statKey]);
   };
 
@@ -168,14 +174,110 @@ const AdminPanel = () => {
     }
   };
 
+  const handleAmmoClick = (weaponType, ammoType, currentValue) => {
+    setSelectedAmmoValue({ weaponType, ammoType });
+    setSelectedWeaponStat(null); // Clear weapon stat selection
+    setSelectedEquippedWeaponStatus(null); // Clear equipped weapon status selection
+    setNewAmmoValue(currentValue);
+  };
+
+  const handleSubmitAmmoUpdate = async () => {
+    if (!selectedAmmoValue || isNaN(parseInt(newAmmoValue))) return;
+
+    const { weaponType, ammoType } = selectedAmmoValue;
+    const newValue = parseInt(newAmmoValue);
+
+    if (isNaN(newValue) || newValue < 0) return;
+
+    const shipRef = doc(db, "ships", "scarlet-fury");
+    try {
+      await updateDoc(shipRef, {
+        [`weapons.${weaponType}.ammo.${ammoType}.ammoStored`]: newValue,
+      });
+      console.log("Updated ${ammoType} for ${weaponType} to ${newValue}");
+      setSelectedAmmoValue(null);
+    } catch (error) {
+      console.error("Error updating ammo:", error);
+    }
+  };
+
+  const handleEquippedWeaponStatusClick = (weaponType, deck, side, index, key, currentValue) => {
+    setSelectedEquippedWeaponStatus({ weaponType, deck, side, index, key });
+    setSelectedAmmoValue(null); // Clear ammo selection
+    setSelectedWeaponStat(null); // Clear weapon stat selection
+    setNewEquippedWeaponStatus(currentValue);
+  };
+
+  const handleSubmitEquippedWeaponStatusUpdate = async () => {
+    if (!selectedEquippedWeaponStatus) return;
+
+    const { weaponType, deck, side, index, key } = selectedEquippedWeaponStatus;
+    const isBooleanField = key === "isLoaded";
+    const newValue = isBooleanField ? newEquippedWeaponStatus === "true" : parseInt(newEquippedWeaponStatus);
+
+    if (!isBooleanField && isNaN(newValue)) return; // Validate integer input
+
+    try {
+      const shipRef = doc(db, "ships", "scarlet-fury");
+
+      // Get the current weaponData array from Firestore
+      const shipSnapshot = await getDoc(shipRef);
+      if (!shipSnapshot.exists()) throw new Error("Ship data not found!");
+
+      const currentWeaponData = shipSnapshot.data().weapons[weaponType][deck][side].weaponData;
+
+      // Ensure index is valid
+      if (!currentWeaponData || index < 0 || index >= currentWeaponData.length) {
+        throw new Error("Invalid weapon index.");
+      }
+
+      // Clone the array and update the specific entry
+      const updatedWeaponData = [...currentWeaponData];
+      updatedWeaponData[index] = {
+        ...updatedWeaponData[index],
+        [key]: newValue,
+      };
+
+      // Update Firestore with the full modified array
+      await updateDoc(shipRef, {
+        [`weapons.${weaponType}.${deck}.${side}.weaponData`]: updatedWeaponData,
+      });
+
+      // Update local state
+      setShipData((prev) => ({
+        ...prev,
+        weapons: {
+          ...prev.weapons,
+          [weaponType]: {
+            ...prev.weapons[weaponType],
+            [deck]: {
+              ...prev.weapons[weaponType][deck],
+              [side]: {
+                ...prev.weapons[weaponType][deck][side],
+                weaponData: updatedWeaponData,
+              },
+            },
+          },
+        },
+      }));
+
+      // Reset selection
+      setSelectedEquippedWeaponStatus(null);
+      setNewEquippedWeaponStatus("");
+    } catch (error) {
+      console.error("Error updating equipped weapon status:", error);
+    }
+  };
+
+
 
   const shipWeaponsCard = () => {
-/*
-    const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
-    const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
-    const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
-    const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
- */
+    /*
+        const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
+        const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
+        const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
+        const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
+     */
     const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
     const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
     const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
@@ -198,16 +300,16 @@ const AdminPanel = () => {
     const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
     const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
     const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
-/*
-    const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
-    const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
-    const cannonsNormalRange = shipData.weapons.cannons.statBlock.normalRange;
-    const cannonsMaxRange = shipData.weapons.cannons.statBlock.maxRange;
-    const mainDeckWeaponsPort = mainDeckBallistaePort + mainDeckCannonsPort + mainDeckMangonelsPort + mainDeckTrebuchetsPort;
-    const mainDeckWeaponsStarboard = mainDeckBallistaeStarboard + mainDeckCannonsStarboard + mainDeckMangonelsStarboard + mainDeckTrebuchetsStarboard;
-    const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
-    const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
- */
+    /*
+        const ballistaeNormalRange = shipData.weapons.ballistae.statBlock.normalRange;
+        const ballistaeMaxRange = shipData.weapons.ballistae.statBlock.maxRange;
+        const cannonsNormalRange = shipData.weapons.cannons.statBlock.normalRange;
+        const cannonsMaxRange = shipData.weapons.cannons.statBlock.maxRange;
+        const mainDeckWeaponsPort = mainDeckBallistaePort + mainDeckCannonsPort + mainDeckMangonelsPort + mainDeckTrebuchetsPort;
+        const mainDeckWeaponsStarboard = mainDeckBallistaeStarboard + mainDeckCannonsStarboard + mainDeckMangonelsStarboard + mainDeckTrebuchetsStarboard;
+        const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
+        const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
+     */
     return (
       <div className="admin-card weapons-info-admin-card">
         <h1>Ship Weapons Info</h1>
@@ -255,18 +357,39 @@ const AdminPanel = () => {
                           {shipData.weapons.ballistae.mainDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
                               {index}:{" "}
-                              <span>
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "isLoaded", shipData.weapons.ballistae.mainDeck.portSide.weaponData[index].isLoaded)}
+                              >
                                 ({shipData.weapons.ballistae.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
-                              </span>{" "}
-                              <span>
-                                {shipData.weapons.ballistae.mainDeck.portSide.weaponData[index].hp}{" / "}{shipData.weapons.ballistae.statBlock.maxHP}{" HP"}
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "hp", shipData.weapons.ballistae.mainDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.ballistae.mainDeck.portSide.weaponData[index].hp}
                               </span>
+                              {" / "}{shipData.weapons.ballistae.statBlock.maxHP}{" HP"}
                             </p>
                           ))}
                           <p className="equipped-weapon-item">MD Starboard Side:</p>
                           {shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.ballistae.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "isLoaded", shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "hp", shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.ballistae.mainDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.ballistae.statBlock.maxHP} HP
+
                             </p>
                           ))}
                         </>
@@ -277,13 +400,39 @@ const AdminPanel = () => {
                           <p className="equipped-weapon-item">LD Port Side:</p>
                           {shipData.weapons.ballistae.lowerDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].hp} / {shipData.weapons.ballistae.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "portSide", index, "isLoaded", shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "portSide", index, "hp", shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.ballistae.lowerDeck.portSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.ballistae.statBlock.maxHP} HP
                             </p>
                           ))}
                           <p className="equipped-weapon-item">LD Starboard Side:</p>
                           {shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.ballistae.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "starboardSide", index, "isLoaded", shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "starboardSide", index, "hp", shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.ballistae.statBlock.maxHP} HP
                             </p>
                           ))}
                         </>
@@ -296,16 +445,42 @@ const AdminPanel = () => {
                       {mainDeckTotalCannons > 0 && (
                         <>
                           <p><strong>Main Deck: </strong>{mainDeckTotalCannons}</p>
-                          <p className="equipped-weapon-item">Port Side:</p>
+                          <p className="equipped-weapon-item">MD Port Side:</p>
                           {shipData.weapons.cannons.mainDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.cannons.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.cannons.mainDeck.portSide.weaponData[index].hp} / {shipData.weapons.cannons.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "isLoaded", shipData.weapons.cannons.mainDeck.portSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.cannons.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "hp", shipData.weapons.cannons.mainDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.cannons.mainDeck.portSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.cannons.statBlock.maxHP} HP
                             </p>
                           ))}
-                          <p className="equipped-weapon-item">Starboard Side:</p>
+                          <p className="equipped-weapon-item">MD Starboard Side:</p>
                           {shipData.weapons.cannons.mainDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.cannons.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "isLoaded", shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "hp", shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.cannons.mainDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.cannons.statBlock.maxHP} HP
                             </p>
                           ))}
                         </>
@@ -313,16 +488,42 @@ const AdminPanel = () => {
                       {lowerDeckTotalCannons > 0 && (
                         <>
                           <p><strong>Lower Deck: </strong>{lowerDeckTotalCannons}</p>
-                          <p className="equipped-weapon-item">Port Side:</p>
+                          <p className="equipped-weapon-item">LD Port Side:</p>
                           {shipData.weapons.cannons.lowerDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].hp} / {shipData.weapons.cannons.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "portSide", index, "isLoaded", shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "portSide", index, "hp", shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.cannons.lowerDeck.portSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.cannons.statBlock.maxHP} HP
                             </p>
                           ))}
-                          <p className="equipped-weapon-item">Starboard Side:</p>
+                          <p className="equipped-weapon-item">LD Starboard Side:</p>
                           {shipData.weapons.cannons.lowerDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.cannons.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "starboardSide", index, "isLoaded", shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "lowerDeck", "starboardSide", index, "hp", shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.cannons.lowerDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.cannons.statBlock.maxHP} HP
                             </p>
                           ))}
                         </>
@@ -335,16 +536,42 @@ const AdminPanel = () => {
                       {mainDeckTotalMangonels > 0 && (
                         <>
                           <p><strong>Main Deck: </strong>{mainDeckTotalMangonels}</p>
-                          <p className="equipped-weapon-item">Port Side:</p>
+                          <p className="equipped-weapon-item">MD Port Side:</p>
                           {shipData.weapons.mangonels.mainDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].hp} / {shipData.weapons.mangonels.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "isLoaded", shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "hp", shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.mangonels.mainDeck.portSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.mangonels.statBlock.maxHP} HP
                             </p>
                           ))}
-                          <p className="equipped-weapon-item">Starboard Side:</p>
+                          <p className="equipped-weapon-item">MD Starboard Side:</p>
                           {shipData.weapons.mangonels.mainDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.mangonels.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "isLoaded", shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "hp", shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.mangonels.mainDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.mangonels.statBlock.maxHP} HP
                             </p>
                           ))}
                         </>
@@ -357,16 +584,42 @@ const AdminPanel = () => {
                       {mainDeckTotalTrebuchets > 0 && (
                         <>
                           <p><strong>Main Deck: </strong>{mainDeckTotalTrebuchets}</p>
-                          <p className="equipped-weapon-item">Port Side:</p>
+                          <p className="equipped-weapon-item">MD Port Side:</p>
                           {shipData.weapons.trebuchets.mainDeck.portSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].hp} / {shipData.weapons.trebuchets.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "isLoaded", shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "portSide", index, "hp", shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.trebuchets.mainDeck.portSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.trebuchets.statBlock.maxHP} HP
                             </p>
                           ))}
-                          <p className="equipped-weapon-item">Starboard Side:</p>
+                          <p className="equipped-weapon-item">MD Starboard Side:</p>
                           {shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData.map((weapon, index) => (
                             <p key={index} className="equipped-weapon-sub-item">
-                              {index}: ({shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"}) {shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].hp} / {shipData.weapons.trebuchets.statBlock.maxHP} HP
+                              {index}:{" "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "isLoaded", shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].isLoaded)}
+                              >
+                                ({shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].isLoaded ? "L" : "U"})
+                              </span>{" - "}
+                              <span
+                                className="clickable-stat"
+                                onClick={() => handleEquippedWeaponStatusClick(weaponType, "mainDeck", "starboardSide", index, "hp", shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].hp)}
+                              >
+                                {shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData[index].hp}
+                              </span>
+                              {" / "}{shipData.weapons.trebuchets.statBlock.maxHP} HP
                             </p>
                           ))}
                         </>
@@ -376,15 +629,41 @@ const AdminPanel = () => {
                 </div>
                 <hr />
                 <h3>Ammo:</h3>
-                {Object.entries(weaponData.ammo).map(([ammoType, ammoData]) => (
-                  <p
-                    key={ammoType}
-                    className="equipped-ammo-item"
-                  >
-                    <strong>  {ammoType.replace(/(trebuchet|mangonel|bolt|cannonball|stone)/gi, "").replace(/([a-z])([A-Z])/g, "$1 $2").trim()}: </strong>
-                    {ammoData.ammoStored}
-                  </p>
-                ))}
+                {Object.entries(weaponData.ammo)
+                  .sort(([ammoTypeA], [ammoTypeB]) => {
+                    const standardAmmoTypes = {
+                      ballistae: ["boltStandard"],
+                      cannons: ["cannonballStandard"],
+                      mangonels: ["mangonelStoneStandard"],
+                      trebuchets: ["trebuchetStoneStandard"],
+                    };
+
+                    const weaponStandardAmmo = standardAmmoTypes[weaponType] || [];
+
+                    const isAStandard = weaponStandardAmmo.includes(ammoTypeA);
+                    const isBStandard = weaponStandardAmmo.includes(ammoTypeB);
+
+                    if (isAStandard && !isBStandard) return -1; // A should come first
+                    if (!isAStandard && isBStandard) return 1;  // B should come first
+
+                    return ammoTypeA.localeCompare(ammoTypeB); // Alphabetical order otherwise
+                  })
+                  .map(([ammoType, ammoData]) => (
+                    <p key={ammoType} className="equipped-ammo-item">
+                      <strong>
+                        {ammoType
+                          .replace(/(trebuchet|mangonel|bolt|cannonball|stone)/gi, "")
+                          .replace(/([a-z])([A-Z])/g, "$1 $2")
+                          .trim()}:
+                      </strong>
+                      <span
+                        className="clickable-stat"
+                        onClick={() => handleAmmoClick(weaponType, ammoType, ammoData.ammoStored)}
+                      >
+                        {ammoData.ammoStored}
+                      </span>
+                    </p>
+                  ))}
                 {selectedWeaponStat && (
                   <div className="stat-edit-container weapon-stat-edit-container">
                     <h3>
@@ -407,6 +686,70 @@ const AdminPanel = () => {
                     <p>
                       <button onClick={handleSubmitWeaponUpdate}>Submit</button>
                       <button onClick={() => setSelectedWeaponStat(null)}>Cancel</button>
+                    </p>
+                  </div>
+                )}
+                {selectedAmmoValue && (
+                  <div className="stat-edit-container weapon-stat-edit-container">
+                    <h3>
+                      Editing{" "}
+                      {selectedAmmoValue.ammoType
+                        .replace(/(trebuchet|mangonel|bolt|cannonball|stone)/gi, "")
+                        .replace(/([a-z])([A-Z])/g, "$1 $2")
+                        .trim()
+                        .replace(/^./, (char) => char.toUpperCase())}{" "}
+                      Ammo Count for{" "}
+                      {selectedAmmoValue.weaponType
+                        .replace(/^./, (char) => char.toUpperCase())}
+                    </h3>
+                    <p>
+                      <input
+                        ref={inputRef}
+                        type="number"
+                        value={newAmmoValue}
+                        onChange={(e) => setNewAmmoValue(e.target.value)}
+                      />
+                    </p>
+                    <p>
+                      <button onClick={handleSubmitAmmoUpdate}>Submit</button>
+                      <button onClick={() => setSelectedAmmoValue(null)}>Cancel</button>
+                    </p>
+                  </div>
+                )}
+                {selectedEquippedWeaponStatus && (
+                  <div className="stat-edit-container weapon-stat-edit-container">
+                    <h3>
+                      Editing{" "}
+                      {selectedEquippedWeaponStatus.key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (char) => char.toUpperCase())}
+                      {" "} for {selectedEquippedWeaponStatus.weaponType} {" "}
+                      on {selectedEquippedWeaponStatus.deck} Deck, {selectedEquippedWeaponStatus.side} Side, Weapon #{selectedEquippedWeaponStatus.index + 1}
+                    </h3>
+
+                    <p>
+                      {selectedEquippedWeaponStatus.key === "isLoaded" ? (
+                        // Boolean toggle for isLoaded
+                        <select
+                          ref={inputRef}
+                          value={newEquippedWeaponStatus}
+                          onChange={(e) => setNewEquippedWeaponStatus(e.target.value)}
+                        >
+                          <option value="true">Loaded</option>
+                          <option value="false">Unloaded</option>
+                        </select>
+                      ) : (
+                        // Numeric input for HP
+                        <input
+                          ref={inputRef}
+                          type="number"
+                          value={newEquippedWeaponStatus}
+                          onChange={(e) => setNewEquippedWeaponStatus(e.target.value)}
+                        />
+                      )}
+                    </p>
+
+                    <p>
+                      <button onClick={handleSubmitEquippedWeaponStatusUpdate}>Submit</button>
+                      <button onClick={() => setSelectedEquippedWeaponStatus(null)}>Cancel</button>
                     </p>
                   </div>
                 )}

@@ -54,13 +54,13 @@ const AdminPanel = () => {
   };
 
   //useEffect to auto-focus inputs when opened
-
+  //TODO: Add condition for booleans to not cause an error so that selectedEquippedWeaponStatus can be added to this useEffect
   useEffect(() => {
-    if ((selectedStat || selectedHullStat) && inputRef.current) {
+    if ((selectedStat || selectedHullStat || selectedWeaponStat || selectedAmmoValue) && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select(); // Select text for easy editing
     }
-  }, [selectedStat, selectedHullStat]);
+  }, [selectedStat, selectedHullStat, selectedWeaponStat, selectedAmmoValue]);
 
   //ability score card functions
 
@@ -655,7 +655,7 @@ const AdminPanel = () => {
                           .replace(/(trebuchet|mangonel|bolt|cannonball|stone)/gi, "")
                           .replace(/([a-z])([A-Z])/g, "$1 $2")
                           .trim()}:
-                      </strong>
+                      </strong>{" "}
                       <span
                         className="clickable-stat"
                         onClick={() => handleAmmoClick(weaponType, ammoType, ammoData.ammoStored)}

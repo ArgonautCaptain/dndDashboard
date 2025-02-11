@@ -1,8 +1,7 @@
-import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import Map from './components/map';
-import AdminPanel from './components/adminpanel';
-import ShipDashboard from './components/shipdashboard';
+import Map from './pages/map';
+import AdminPanel from './pages/adminpanel';
+import ShipDashboard from './pages/shipdashboard';
 import './App.css'; // Ensure styles for the header are included
 import 'leaflet/dist/leaflet.css';
 

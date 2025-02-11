@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -30,6 +31,9 @@ export const ShipDataProvider = ({ children }) => {
     </ShipDataContext.Provider>
   );
 };
+ShipDataProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
-// Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useShipData = () => useContext(ShipDataContext);

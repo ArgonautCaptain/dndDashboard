@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useShipData } from '../data/shipData';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -26,6 +26,12 @@ const AdminPanel = () => {
   const [newDiceCount, setNewDiceCount] = useState("");
   const [selectedMovementStat, setSelectedMovementStat] = useState(null);
   const [newMovementValue, setNewMovementValue] = useState("");
+  const [selectedCrewStat, setSelectedCrewStat] = useState(null);
+  const [newCrewValue, setNewCrewValue] = useState("");
+  const [incomingDamageModalOpen, setIncomingDamageModalOpen] = useState(false);
+  const [incomingAttackRollValue, setIncomingAttackRollValue] = useState(0);
+  const [incomingDamageRollValue, setIncomingDamageRollValue] = useState(0);
+  const [incomingDamageDirection, setIncomingDamageDirection] = useState("");
 
   const correctPassword = 'KeithBaker';
 
@@ -184,7 +190,7 @@ const AdminPanel = () => {
 
     return (
       <div className="admin-card hull-info-admin-card">
-        <h1>Ship Hull Info</h1>
+        <h1>Hull Info</h1>
         <p>
           <strong>Hull Armor Class:</strong>{" "}
           <span className="clickable-stat" onClick={() => handleHullStatClick("armorClass")}>
@@ -1130,7 +1136,7 @@ const AdminPanel = () => {
                 {selectedMovementStat.statKey
                   .replace(/([a-z])([A-Z])/g, "$1 $2")
                   .replace(/^./, (char) => char.toUpperCase())}{" "}
-                  Value for{" "}
+                Value for{" "}
                 {selectedMovementStat.componentKey
                   .replace(/([a-z])([A-Z])/g, "$1 $2")
                   .replace(/^./, (char) => char.toUpperCase())}
@@ -1223,21 +1229,520 @@ const AdminPanel = () => {
   //crew card functions
 
   const shipCrewCard = () => {
+    const handleCrewStatClick = (componentKey, statKey, currentValue) => {
+      setSelectedCrewStat({ componentKey, statKey });
+      setNewCrewValue(currentValue);
+    };
+
+    const handleSubmitCrewStatUpdate = async () => {
+      if (!selectedCrewStat || isNaN(parseInt(newCrewValue))) return;
+
+      const { componentKey, statKey } = selectedCrewStat;
+      const newValue = parseInt(newCrewValue);
+
+      try {
+        const shipRef = doc(db, "ships", "scarlet-fury");
+        await updateDoc(shipRef, {
+          [`${componentKey}.${statKey}`]: newValue,
+        });
+        console.log(`Updated ${componentKey}.${statKey} to ${newValue}`);
+        setSelectedCrewStat(null);
+        setNewCrewValue("");
+      } catch (error) {
+        console.error("Error updating crew data:", error);
+      }
+    };
+
+    const crewStatEditor = () => {
+      return (
+        <>
+          {selectedCrewStat && (
+            <div className="stat-edit-container">
+              <h3>Editing{" "}
+                {selectedCrewStat.statKey
+                  .replace(/([a-z])([A-Z])/g, "$1 $2")
+                  .replace(/^./, (char) => char.toUpperCase())}{" "}
+                {" "}for{" "}
+                {selectedCrewStat.componentKey
+                  .replace(/([a-z])([A-Z])/g, "$1 $2")
+                  .replace(/^./, (char) => char.toUpperCase())}
+              </h3>
+              <p>
+                <input
+                  ref={inputRef}
+                  type="number"
+                  value={newCrewValue}
+                  onChange={(e) => setNewCrewValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSubmitCrewStatUpdate(); // Submit on Enter key
+                    if (e.key === 'Escape') setSelectedCrewStat(null); // Cancel on Escape key
+                  }}
+                />
+              </p>
+              <p>
+                <button onClick={handleSubmitCrewStatUpdate}>Submit</button>
+                <button onClick={() => setSelectedCrewStat(null)}>Cancel</button>
+              </p>
+            </div>
+          )}
+        </>
+      )
+    }
+
     return (
       <div className="admin-card crew-info-admin-card">
-        <h1>Ship Crew Info</h1>
-        <p><strong>Max Crew:</strong> {shipData.soulsOnboard.maxCrew}</p>
-        <p><strong>Current Crew Morale:</strong> {shipData.soulsOnboard.crewMorale}</p>
-        <hr />
-        <h2>Officer Ranks:</h2>
-        {Object.entries(shipData.officerRanks).map(([role, rank]) => (
-          <p key={role}><strong>{role}:</strong> Rank {rank}</p>
-        ))}
+        <h1>Crew Info</h1>
+        <div className="crew-card-lower-container">
+          <div className="crew-left-container">
+            <p><strong>Command Crew: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "commandCrew", shipData.soulsOnboard.commandCrew)}>
+                {shipData.soulsOnboard.commandCrew}
+              </span>
+              {" / "}
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "maxCommandCrew", shipData.soulsOnboard.maxCommandCrew)}>
+                {shipData.soulsOnboard.maxCommandCrew}
+              </span>
+            </p>
+            <p><strong>Navigation Crew: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "navCrew", shipData.soulsOnboard.navCrew)}>
+                {shipData.soulsOnboard.navCrew}
+              </span>
+              {" / "}
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "maxNavCrew", shipData.soulsOnboard.maxNavCrew)}>
+                {shipData.soulsOnboard.maxNavCrew}
+              </span>
+            </p>
+            <p><strong>Weapons Crew: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "weaponsCrew", shipData.soulsOnboard.weaponsCrew)}>
+                {shipData.soulsOnboard.weaponsCrew}
+              </span>
+              {" / "}
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "maxWeaponsCrew", shipData.soulsOnboard.maxWeaponsCrew)}>
+                {shipData.soulsOnboard.maxWeaponsCrew}
+              </span>
+            </p>
+            <p><strong>Miscellaneous Crew: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "miscCrew", shipData.soulsOnboard.miscCrew)}>
+                {shipData.soulsOnboard.miscCrew}
+              </span>
+              {" / "}
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "maxMiscCrew", shipData.soulsOnboard.maxMiscCrew)}>
+                {shipData.soulsOnboard.maxMiscCrew}
+              </span>
+            </p>
+            <p><strong>Current Crew Morale: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "crewMorale", shipData.soulsOnboard.crewMorale)}>
+                {shipData.soulsOnboard.crewMorale}
+              </span>
+            </p>
+            <p><strong>Max Crew: </strong>
+              <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "maxCrew", shipData.soulsOnboard.maxCrew)}>
+                {shipData.soulsOnboard.maxCrew}
+              </span>
+            </p>
+          </div>
+          <div className="crew-right-container">
+            <h2>Officer Ranks:</h2>
+            {Object.entries(shipData.officerRanks).map(([role, rank]) => (
+              <p key={role}><strong>{role}: </strong>
+                <span className="clickable-stat" onClick={() => handleCrewStatClick("officerRanks", role, rank)}>
+                  Rank {rank}
+                </span>
+              </p>
+            ))}
+          </div>
+        </div>
+        {crewStatEditor()}
       </div>
     )
   };
 
+  const incomingDamage = () => {
 
+    const getDamageColor = (currentHP, maxHP) => {
+      const percentage = (currentHP / maxHP) * 100;
+      if (percentage > 99) return 'lime';
+      if (percentage > 49) return 'yellow';
+      return 'red';
+    };
+
+    const bowHullColor = getDamageColor(shipData.hull.hullBow, shipData.hull.hullBowMax);
+    const portHullColor = getDamageColor(shipData.hull.hullPort, shipData.hull.hullPortMax);
+    const starboardHullColor = getDamageColor(shipData.hull.hullStarboard, shipData.hull.hullStarboardMax);
+    const sternHullColor = getDamageColor(shipData.hull.hullStern, shipData.hull.hullSternMax);
+    const foresailColor = getDamageColor(shipData.movementSails.sailForeHP, shipData.movementSails.sailForeMaxHP);
+    const mainsailColor = getDamageColor(shipData.movementSails.sailMainHP, shipData.movementSails.sailMainMaxHP);
+    const aftSailColor = getDamageColor(shipData.movementSails.sailAftHP, shipData.movementSails.sailAftMaxHP);
+    const helmColor = getDamageColor(shipData.helmControl.hitPoints, shipData.helmControl.maxHP);
+
+    const handleIncomingDamageButtonClick = () => {
+      console.log("Incoming Damage Button Clicked");
+      setIncomingDamageModalOpen(true);
+    };
+
+    const handleIncomingDamageSubmit = async () => {
+      if (isNaN(parseInt(incomingDamageRollValue))) return;
+      //firebase damage submission code goes here
+
+
+
+      console.log(`Applying ${incomingDamageRollValue} damage to the ship`);
+      //cleanup
+      setIncomingAttackRollValue(0);
+      setIncomingDamageRollValue(0);
+      setIncomingDamageDirection("");
+      setIncomingDamageModalOpen(false);
+    };
+
+    const boatSVG = () => {
+      return (
+        <>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 900 240"
+            width="900px"
+            height="240px"
+            style={{ background: "#00000000" }}
+          >
+            {/* Bow Hull */}
+            <path
+              id="Bow"
+              d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230"
+              fill="none"
+              stroke={bowHullColor}
+              strokeMiterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="55"
+              y="120"
+              stroke={bowHullColor}
+              fill={bowHullColor}
+              textAnchor="left"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Bow: {shipData.hull.hullBow} / {shipData.hull.hullBowMax}
+            </text>
+
+            {/* Port Hull */}
+            <line
+              id="Port"
+              x1="240"
+              y1="230"
+              x2="720"
+              y2="230"
+              fill="none"
+              stroke={portHullColor}
+              strokeMiterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="500"
+              y="210"
+              stroke={portHullColor}
+              fill={portHullColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Port: {shipData.hull.hullPort} / {shipData.hull.hullPortMax}
+            </text>
+
+            {/* Starboard Hull */}
+            <line
+              id="Starboard"
+              x1="240"
+              y1="10"
+              x2="720"
+              y2="10"
+              fill="none"
+              stroke={starboardHullColor}
+              strokeMiterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="500"
+              y="30"
+              stroke={starboardHullColor}
+              fill={starboardHullColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Starboard: {shipData.hull.hullStarboard} / {shipData.hull.hullStarboardMax}
+            </text>
+
+            {/* Stern Hull */}
+            <path
+              id="Stern"
+              d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740"
+              fill="none"
+              stroke={sternHullColor}
+              strokeMiterlimit="1"
+              strokeWidth="4"
+            />
+            <text
+              x="790"
+              y="120"
+              stroke={sternHullColor}
+              fill={sternHullColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Stern: {shipData.hull.hullStern} / {shipData.hull.hullSternMax}
+            </text>
+            {/* Foresail */}
+            <rect
+              width="170"
+              height="50"
+              x="160"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="300"
+              cy="120"
+              r="15"
+              fill={foresailColor}
+              stroke={foresailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="175"
+              y="120"
+              stroke={foresailColor}
+              fill={foresailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Foresail: {shipData.movementSails.sailForeHP} / {shipData.movementSails.sailForeMaxHP}
+            </text>
+            {/* Mainsail */}
+            <rect
+              width="170"
+              height="50"
+              x="360"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="500"
+              cy="120"
+              r="15"
+              fill={mainsailColor}
+              stroke={mainsailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="375"
+              y="120"
+              stroke={mainsailColor}
+              fill={mainsailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Mainsail: {shipData.movementSails.sailMainHP} / {shipData.movementSails.sailMainMaxHP}
+            </text>
+            {/* Aft Sail */}
+            <rect
+              width="170"
+              height="50"
+              x="560"
+              y="95"
+              rx="5"
+              ry="5"
+              stroke="grey"
+              fill="none"
+            />
+            <circle
+              cx="700"
+              cy="120"
+              r="15"
+              fill={aftSailColor}
+              stroke={aftSailColor}
+              strokeWidth="1"
+            />
+            <text
+              x="575"
+              y="120"
+              stroke={aftSailColor}
+              fill={aftSailColor}
+              textAnchor="right"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Aft Sail: {shipData.movementSails.sailAftHP} / {shipData.movementSails.sailAftMaxHP}
+            </text>
+            {/* Helm */}
+            <path
+              stroke="grey"
+              fill="none"
+              d="M745,85 h30 c0,0,5,0,5,5 v60 c0,0,0,5,5,5 h25 c0,0,5,0,5,5 v35 c0,0,0,5,-5,5 h-100 c0,0,-5,0,-5,-5 v-35 c0,0,0,-5,5,-5 h25 c0,0,5,0,5,-5 v-60 c0,0,0,-5,5,-5"
+            />
+            <rect
+              width="20"
+              height="50"
+              x="750"
+              y="95"
+              fill="none"
+              stroke={helmColor}
+              strokeWidth="4"
+            />
+            <line
+              id="helm"
+              x1="760"
+              y1="105"
+              x2="760"
+              y2="135"
+              stroke={helmColor}
+              strokeWidth="4"
+            />
+            <text
+              x="760"
+              y="177.5"
+              stroke={helmColor}
+              fill={helmColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="ship-svg-text"
+            >
+              Helm {shipData.helmControl.hitPoints} / {shipData.helmControl.maxHP}
+            </text>
+          </svg>
+        </>
+      )
+    };
+
+    return (
+      <div className="incoming-damage-container">
+        <button onClick={handleIncomingDamageButtonClick}>
+          {"💥 Incoming Damage"}
+        </button>
+        {incomingDamageModalOpen && (
+          <div className="incoming-damage-modal">
+            <button
+              className="close-modal-button"
+              onClick={() => {
+                setIncomingAttackRollValue(0);
+                setIncomingDamageRollValue(0);
+                setIncomingDamageDirection("");
+                setIncomingDamageModalOpen(false);
+              }}
+            >
+              X
+            </button>
+            <h1>Incoming Damage</h1>
+            <label>Attack Roll: </label>
+            <input
+              type="number"
+              value={incomingAttackRollValue}
+              onChange={(e) => setIncomingAttackRollValue(e.target.value)}
+            />
+            <br />
+            <label>Damage Roll: </label>
+            <input
+              type="number"
+              value={incomingDamageRollValue}
+              onChange={(e) => setIncomingDamageRollValue(e.target.value)}
+            />
+            <div className="incoming-damage-modal-body">
+              <div className="boat-wrapper">
+                {boatSVG()}
+              </div>
+              <div className="damage-direction-starboard-front">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "starboardFront" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("starboardFront")}
+                >
+                  ↘
+                </button>
+              </div>
+              <div className="damage-direction-starboard">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "starboard" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("starboard")}
+                >
+                  ↓
+                </button>
+              </div>
+              <div className="damage-direction-starboard-rear">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "starboardRear" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("starboardRear")}
+                >
+                  ↙
+                </button>
+              </div>
+              <div className="damage-direction-front">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "front" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("front")}
+                >
+                  →
+                </button>
+              </div>
+              <div className="damage-direction-rear">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "rear" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("rear")}
+                >
+                  ←
+                </button>
+              </div>
+              <div className="damage-direction-port-front">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "portFront" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("portFront")}
+                >
+                  ↗
+                </button>
+              </div>
+              <div className="damage-direction-port">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "port" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("port")}
+                >
+                  ↑
+                </button>
+              </div>
+              <div className="damage-direction-port-rear">
+                <button
+                  className="boat-grid-arrow"
+                  style={{ backgroundColor: incomingDamageDirection === "portRear" ? "red" : "transparent" }}
+                  onClick={() => setIncomingDamageDirection("portRear")}
+                >
+                  ↖
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleIncomingDamageSubmit}
+            >
+              Apply Damage
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -1256,17 +1761,19 @@ const AdminPanel = () => {
             </form>
           ) : (
             <>
-              <button onClick={handleLogout}>Logout</button>
-              <button
-                onClick={() =>
-                  window.open(
-                    "https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury",
-                    '_blank'
-                  )
-                }
-              >
-                Firebase
-              </button>
+              <div className="admin-panel-header">
+                <div className="admin-header-buttons-left">
+                  {incomingDamage()}
+                </div>
+                <div className="admin-header-buttons-right">
+                  <button className="firebase-button" onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>
+                    {"🔥 Firebase"}
+                  </button>
+                  <button className="logout-button" onClick={handleLogout}>
+                    {"🚪 Logout"}
+                  </button>
+                </div>
+              </div>
 
               {/* Ship Information Cards */}
               <div className="dm-panel-container">

@@ -14,6 +14,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto Condensed', sans-serif;
+  margin-top: 0;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -737,6 +742,7 @@ button {
   border-radius: 5px;
 }
 
+
 .weapon-categories-container {
   display: flex;
   gap: 20px;
@@ -839,4 +845,174 @@ ul li {
 
 .sails-data {
   margin-left: 15px;
+}
+
+.crew-info-admin-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.crew-card-lower-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.crew-left-container {
+  flex-grow: 1;
+}
+
+.crew-right-container {
+  flex-grow: 1;
+}
+
+.admin-panel-header {
+  display: inline flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.admin-header-buttons-left {
+  display: flex;
+  justify-content: left;
+  gap: 10px;
+}
+
+.admin-header-buttons-right {
+  display: flex;
+  justify-content: right;
+  gap: 10px;
+}
+
+.admin-panel-header button {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  border-radius: 0.25rem;
+  border: solid 1px white;
+  padding: 5px;
+  background-color: #323232;
+}
+
+.admin-panel-header input {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  border-radius: 0.25rem;
+  border: solid 1px white;
+  padding: 5px;
+  background-color: #323232;
+  margin: 10px;
+}
+
+.admin-panel-header label {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.admin-panel-header button:hover {
+  cursor: pointer;
+  background-color: #808080;
+}
+
+.incoming-damage-modal {
+  position: absolute;
+  left: 50vw;
+  top: 50vh;
+  transform: translate(-50%, -50%);
+  height: 800px;
+  width: 1200px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border: solid 2px red;
+  border-radius: 10px;
+  z-index: 1000;
+  padding: 25px;
+}
+
+.close-modal-button {
+  position: absolute;
+  display: flex;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  font-size: 10px !important;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.incoming-damage-modal-body {
+  display: grid;
+  margin: 20px;
+  padding: 20px;
+  gap: 10px;
+  grid-template-columns: (3, auto);
+  grid-template-rows: (3, auto);
+  align-items: center;
+  justify-content: center;
+
+}
+
+.boat-wrapper {
+  grid-column: 2;
+  grid-row: 2;
+  height: 240px;
+  width: 900px;
+}
+
+.boat-grid-arrow {
+  width: 72px;
+  height: 72px;
+  font-size: 36px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.damage-direction-starboard-front {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.damage-direction-starboard {
+  grid-column: 2;
+  grid-row: 1;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.damage-direction-starboard-rear {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.damage-direction-front {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.damage-direction-rear {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.damage-direction-port-front {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.damage-direction-port {
+  grid-column: 2;
+  grid-row: 3;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.damage-direction-port-rear {
+  grid-column: 3;
+  grid-row: 3;
 }

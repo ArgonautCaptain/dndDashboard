@@ -31,13 +31,13 @@ const ShipDashboard = () => {
     return null;
   };
 
-  useEffect(() => {
+/*   useEffect(() => {
     const cookieKey = 'shipWeaponStates';
     const initialWeaponStates = getCookie(cookieKey) || {};
 
     console.log('Loaded weapon states from cookie:', initialWeaponStates);
     // You could integrate this into your UI if needed
-  }, []);
+  }, []); */
 
 
 
@@ -1183,8 +1183,8 @@ const ShipDashboard = () => {
   const addOrder = (action, weaponType, location, weaponIndex) => {
     const newOrder = { action, weaponType, location, weaponIndex };
     setOrders([...orders, newOrder]);
-    console.log("Adding a new order:", { action, weaponType, location, weaponIndex });
-    console.log("Updated orders array:", [...orders, { action, weaponType, location, weaponIndex }]);
+    //console.log("Adding a new order:", { action, weaponType, location, weaponIndex });
+    //console.log("Updated orders array:", [...orders, { action, weaponType, location, weaponIndex }]);
 
   };
 
@@ -1206,7 +1206,7 @@ const ShipDashboard = () => {
       // Derive unique weapon key for cookies
       const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`;
 
-      console.log(`Processing ${action} order for ${weaponKey}`);
+      //console.log(`Processing ${action} order for ${weaponKey}`);
 
       // Update state based on action
       if (action === 'Fire') {
@@ -1218,7 +1218,7 @@ const ShipDashboard = () => {
 
     // Save updated states to cookie
     setCookie(cookieKey, currentWeaponStates);
-    console.log('Updated weapon states:', currentWeaponStates);
+    //console.log('Updated weapon states:', currentWeaponStates);
 
     // Generate modal message
     const modalMessage = orders.map((order) => {

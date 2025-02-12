@@ -774,6 +774,16 @@ ul li {
   color: gold;
 }
 
+.clickable-roll {
+  color: #fa7070;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clickable-roll:hover {
+  color: #ff9f9f;
+}
+
 .stat-edit-container {
   position: absolute;
   bottom: 10px;

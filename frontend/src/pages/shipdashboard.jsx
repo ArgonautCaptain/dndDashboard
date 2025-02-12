@@ -6,6 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
 import { Box } from '@mui/material';
 import deploymentFeatures from '../data/deploymentFeatures.json'
+import TSAbilityRollSpan from '../components/tsAbilityRollSpan';
 
 
 const ShipDashboard = () => {
@@ -31,13 +32,13 @@ const ShipDashboard = () => {
     return null;
   };
 
-/*   useEffect(() => {
-    const cookieKey = 'shipWeaponStates';
-    const initialWeaponStates = getCookie(cookieKey) || {};
+  /*   useEffect(() => {
+      const cookieKey = 'shipWeaponStates';
+      const initialWeaponStates = getCookie(cookieKey) || {};
 
-    console.log('Loaded weapon states from cookie:', initialWeaponStates);
-    // You could integrate this into your UI if needed
-  }, []); */
+      console.log('Loaded weapon states from cookie:', initialWeaponStates);
+      // You could integrate this into your UI if needed
+    }, []); */
 
 
 
@@ -148,12 +149,15 @@ const ShipDashboard = () => {
             <div className="character-scores-grid">
               {Object.entries(characterData.stats).map(([ability, score]) => {
                 const modifier = Math.floor((score - 10) / 2);
+                const modifierString = typeof modifier === 'number' ? (modifier >= 0 ? `+${modifier}` : `${modifier}`) : 'N/A';
                 return (
                   <div key={ability} className="character-score-card">
                     <p className="character-score-name">{ability}</p>
-                    <p className="character-score-modifier">
-                      {modifier >= 0 ? '+' : ''}{modifier}
-                    </p>
+                    <TSAbilityRollSpan abilityName={ability} modifierValue={modifierString}>
+                      <p className="character-score-modifier">
+                        {modifierString}
+                      </p>
+                    </TSAbilityRollSpan>
                     <p className="character-score-value">{score}</p>
                   </div>
                 );
@@ -584,13 +588,15 @@ const ShipDashboard = () => {
         <div className="scores-grid">
           {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map((score) => {
             const modifier = calculateModifier(shipData.abilityScores[score]);
+            const modifierString = typeof modifier === 'number' ? (modifier >= 0 ? `+${modifier}` : `${modifier}`) : 'N/A';
             return (
               <div key={score} className="score-card">
                 <p className="score-name">{score}</p>
-                <p className="score-modifier">
-                  {modifier >= 0 ? '+' : ''}
-                  {modifier}
-                </p>
+                <TSAbilityRollSpan abilityName={score} modifierValue={modifierString}>
+                  <p className="score-modifier">
+                    {modifierString}
+                  </p>
+                </TSAbilityRollSpan>
                 <p className="score-value">{shipData.abilityScores[score]}</p>
               </div>
             );
@@ -607,12 +613,14 @@ const ShipDashboard = () => {
         <div className="saving-throws-grid">
           {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map((score, index) => {
             const modifier = calculateModifier(shipData.abilityScores[score]);
-            const savingThrow = modifier === "N/A" ? "FAIL" : modifier >= 0 ? `+${modifier}` : modifier;
+            const modifierString = typeof modifier === 'number' ? (modifier >= 0 ? `+${modifier}` : `${modifier}`) : 'FAIL';
 
             return (
               <div key={score} className={`saving-throw ${index % 2 === 0 ? "left" : "right"}`}>
                 <span>{score}</span>
-                <span>{savingThrow}</span>
+                <TSAbilityRollSpan abilityName={score} abilitySuffix={"Saving%20Throw"} modifierValue={modifierString}>
+                  {modifierString}
+                </TSAbilityRollSpan>
               </div>
             );
           })}
@@ -1376,8 +1384,8 @@ const ShipDashboard = () => {
                     masterGunnerPanel()
                   ) : (
                     <>
-                    <p>This is the {getRolePanelTitle(activeRole)} control panel.</p>
-                    <h1>Coming Soon</h1>
+                      <p>This is the {getRolePanelTitle(activeRole)} control panel.</p>
+                      <h1>Coming Soon</h1>
                     </>
                   )}
                 </>

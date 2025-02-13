@@ -137,6 +137,23 @@ input {
   text-indent: 0.5em;
 }
 
+.master-gunner-orders-panel {
+  position: fixed;
+  bottom: 50px;
+  right: 100px;
+  height: 300px;
+  width: 300px;
+  background: rgba(0, 0, 0, 0.9);
+  border: solid 2px red;
+  border-radius: 10px;
+  padding: 25px;
+}
+
+.gunner-orders-button {
+  position: absolute;
+  bottom: 25px;
+}
+
 .card h3,
 .card h4,
 .card p {
@@ -407,6 +424,7 @@ input {
 }
 
 .role-tab-content {
+  position: absolute;
   padding-top: 10px;
   height: 90%;
   overflow-y: auto;
@@ -664,11 +682,14 @@ button {
 
 .weapon-group:hover .weapon-svg path,
 .weapon-group:hover .weapon-svg polyline {
-  stroke: white; /* Change stroke color to white on hover */
+  filter: brightness(2.0);
+  transition: .25s;
 }
 
-.weapon-group:hover .weapon-svg {
-  filter: brightness(1.2); /* Optional: Brighten the icon on hover */
+.active-weapon .weapon-svg path,
+.active-weapon .weapon-svg polyline {
+  stroke: yellow;
+
 }
 
 .weapon-tooltip {
@@ -930,6 +951,21 @@ ul li {
 }
 
 .incoming-damage-modal {
+  position: absolute;
+  left: 50vw;
+  top: 50vh;
+  transform: translate(-50%, -50%);
+  height: 800px;
+  width: 1200px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border: solid 2px red;
+  border-radius: 10px;
+  z-index: 1000;
+  padding: 25px;
+}
+
+.attack-request-modal {
   position: absolute;
   left: 50vw;
   top: 50vh;

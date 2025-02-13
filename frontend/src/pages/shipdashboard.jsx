@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -14,33 +14,6 @@ const ShipDashboard = () => {
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
   const [orders, setOrders] = useState([]); // Empty orders list
-
-  const setCookie = (name, value, days = 1) => {
-    const date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${JSON.stringify(value)};expires=${date.toUTCString()};path=/`;
-  };
-
-  const getCookie = (name) => {
-    const cookieArr = document.cookie.split(';');
-    for (let cookie of cookieArr) {
-      const [key, val] = cookie.trim().split('=');
-      if (key === name) {
-        return JSON.parse(val);
-      }
-    }
-    return null;
-  };
-
-  /*   useEffect(() => {
-      const cookieKey = 'shipWeaponStates';
-      const initialWeaponStates = getCookie(cookieKey) || {};
-
-      console.log('Loaded weapon states from cookie:', initialWeaponStates);
-      // You could integrate this into your UI if needed
-    }, []); */
-
-
 
 
   // Real-time listener for Firestore updates
@@ -77,14 +50,8 @@ const ShipDashboard = () => {
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
-  const weaponsActionsPerTurn = shipData ? shipData.soulsOnboard.weaponsCrew + 1 : 0;
-  const [actionsRemaining, setActionsRemaining] = useState(weaponsActionsPerTurn);
-
-  useEffect(() => {
-    if (weaponsActionsPerTurn > 0) {
-      setActionsRemaining(weaponsActionsPerTurn);
-    }
-  }, [weaponsActionsPerTurn]);
+  const weaponsActionsPerTurn = shipData ? Math.floor(shipData.soulsOnboard.weaponsCrew / 2) + 1 : 0;
+  const [actionsRemaining, setActionsRemaining] = useState(0);
 
   // Calculate ship sailing speed
   const calculatedSpeed = (baseSpeed, currentHP, maxHP) => {
@@ -153,11 +120,9 @@ const ShipDashboard = () => {
                 return (
                   <div key={ability} className="character-score-card">
                     <p className="character-score-name">{ability}</p>
-                    <TSAbilityRollSpan abilityName={ability} modifierValue={modifierString}>
-                      <p className="character-score-modifier">
-                        {modifierString}
-                      </p>
-                    </TSAbilityRollSpan>
+                    <p className="character-score-modifier">
+                      {modifierString}
+                    </p>
                     <p className="character-score-value">{score}</p>
                   </div>
                 );
@@ -977,6 +942,8 @@ const ShipDashboard = () => {
   const mainDeckTrebuchetsStarboard = shipData.weapons.trebuchets.mainDeck.starboardSide.weaponData.length;
   const totalBallistae = mainDeckBallistaePort + mainDeckBallistaeStarboard + lowerDeckBallistaePort + lowerDeckBallistaeStarboard;
   const totalCannons = mainDeckCannonsPort + mainDeckCannonsStarboard + lowerDeckCannonsPort + lowerDeckCannonsStarboard;
+
+
   /*
     const totalMangonels = mainDeckMangonelsPort + mainDeckMangonelsStarboard;
     const totalTrebuchets = mainDeckTrebuchetsPort + mainDeckTrebuchetsStarboard;
@@ -1109,23 +1076,27 @@ const ShipDashboard = () => {
       return (
         <Tooltip key={`${deck}-${side}-${i}`} title={<pre className="weapon-tooltip">{tooltipContent}</pre>} arrow placement="top">
           <g
-            className="weapon-group"
-            style={{ cursor: "pointer" }}
-            onClick={() =>
+            className={`weapon-group ${weapon.hasOrders ? 'active-weapon' : ''}`}
+            style={{ cursor: "pointer", height: height, width: width }}
+            onClick={() => {
               addOrder(
                 weapon.isLoaded ? "Fire" : "Reload",
                 type === "cannon" ? "Cannon" : "Ballista",
+                type === "cannon" ? "cannons" : "ballistae",
                 `${deck.charAt(0).toUpperCase() + deck.slice(1)} Deck ${side.charAt(0).toUpperCase() + side.slice(1)}`,
-                i // Pass the weapon index
-              )
-            }
+                `${deck + "Deck"}`,
+                `${side + "Side"}`,
+                i
+              );
+
+            }}
           >
 
             <rect
               x={xOffset - 5}
               y={yOffset - 5}
-              width={width + 10}
-              height={height + 10}
+              width={width + 20}
+              height={height + 20}
               fill="transparent"
               pointerEvents="visible"
               className="weapon-icon"
@@ -1188,151 +1159,222 @@ const ShipDashboard = () => {
     return icons;
   };
 
-  const addOrder = (action, weaponType, location, weaponIndex) => {
-    const newOrder = { action, weaponType, location, weaponIndex };
-    setOrders([...orders, newOrder]);
-    //console.log("Adding a new order:", { action, weaponType, location, weaponIndex });
-    //console.log("Updated orders array:", [...orders, { action, weaponType, location, weaponIndex }]);
+  const addOrder = (action, weaponType, weaponTypeGroup, locationString, deck, side, weaponIndex) => {
+
+    const newOrder = { action, weaponType, locationString, weaponIndex };
+    const isDuplicateOrder = orders.some(
+      (order) =>
+        order.action === newOrder.action &&
+        order.weaponType === newOrder.weaponType &&
+        order.locationString === newOrder.locationString &&
+        order.weaponIndex === newOrder.weaponIndex
+    );
+
+    if (!isDuplicateOrder) {
+      if (actionsRemaining > 0) {
+        setOrders([...orders, newOrder]);
+        setActionsRemaining((prev) => prev - 1);
+
+        setShipData((prevShipData) => {
+          const updatedShipData = { ...prevShipData };
+          const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
+          if (weaponPath) {
+            weaponPath.hasOrders = true;
+          };
+          return updatedShipData;
+        });
+      } else {
+        alert("You have no actions remaining");
+      }
+    } else {
+      const orderIndex = orders.findIndex(
+        (order) =>
+          order.action === newOrder.action &&
+          order.weaponType === newOrder.weaponType &&
+          order.locationString === newOrder.locationString &&
+          order.weaponIndex === newOrder.weaponIndex
+      );
+      removeOrder(orderIndex);
+    }
 
   };
 
 
   const removeOrder = (index) => {
-    /*     const removedOrder = orders[index]; */
+    const currentLocationString = orders[index].locationString;
+    const weaponTypeGroup = orders[index].weaponType === "Cannon" ? "cannons" : "ballistae";
+    const deck = currentLocationString.split(" ")[0].toLowerCase() + "Deck";
+    const side = currentLocationString.split(" ")[2].toLowerCase() + "Side";
+    const weaponIndex = orders[index].weaponIndex;
+
     setOrders((prevOrders) => prevOrders.filter((_, i) => i !== index));
     setActionsRemaining((prev) => prev + 1);
+
+    setShipData((prevShipData) => {
+      const updatedShipData = { ...prevShipData };
+      const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
+      if (weaponPath) {
+        weaponPath.hasOrders = false;
+      };
+      return updatedShipData;
+    });
   };
 
 
-  const executeOrders = () => {
-    const cookieKey = 'shipWeaponStates';
-    const currentWeaponStates = getCookie(cookieKey) || {};
-
+  const executeOrders = async () => {
+    const ordersToSubmit = [];
     orders.forEach((order) => {
-      const { weaponIndex, location, weaponType, action } = order;
+      const { weaponIndex, locationString, weaponType, action } = order;
+      const weaponTypeGroup = weaponType === "Cannon" ? "cannons" : "ballistae";
+      const deck = locationString.split(" ")[0].toLowerCase() + "Deck";
+      const side = locationString.split(" ")[2].toLowerCase() + "Side";
+      ordersToSubmit.push({
+        weaponTypeGroup,
+        deck,
+        side,
+        weaponIndex,
+        action
+      });
 
-      // Derive unique weapon key for cookies
-      const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`;
+      console.log(`Executing ${action} order for ${weaponType} index ${weaponIndex} on the ${locationString}`);
+    });
 
-      //console.log(`Processing ${action} order for ${weaponKey}`);
+    console.log(ordersToSubmit);
 
-      // Update state based on action
-      if (action === 'Fire') {
-        currentWeaponStates[weaponKey] = false; // Mark as unloaded
-      } else if (action === 'Reload') {
-        currentWeaponStates[weaponKey] = true; // Mark as loaded
+    try {
+      const shipRef = doc(db, "ships", "scarlet-fury");
+
+      const shipSnapshot = await getDoc(shipRef);
+      if (!shipSnapshot.exists()) throw new Error("Ship data not found!");
+      const currentOrdersData = shipSnapshot.data().gunnerOrders;
+      if (currentOrdersData.ordersPending === true) {
+        alert("There are already orders in the queue. Please wait for the current orders to be executed.");
+        return;
+      } else {
+        await updateDoc(shipRef, {
+          [`gunnerOrders.orderRequest`]: ordersToSubmit,
+        });
+        await updateDoc(shipRef, {
+          [`gunnerOrders.ordersPending`]: true,
+        });
+        orders.forEach((order) => {
+          setShipData((prevShipData) => {
+            const { weaponIndex, locationString, weaponType } = order;
+            const weaponTypeGroup = weaponType === "Cannon" ? "cannons" : "ballistae";
+            const deck = locationString.split(" ")[0].toLowerCase() + "Deck";
+            const side = locationString.split(" ")[2].toLowerCase() + "Side";
+            const updatedShipData = { ...prevShipData };
+            const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
+            if (weaponPath) {
+              weaponPath.hasOrders = false;
+            };
+            return updatedShipData;
+          });
+        });
+        setOrders([]);
+        setActionsRemaining(weaponsActionsPerTurn);
       }
-    });
-
-    // Save updated states to cookie
-    setCookie(cookieKey, currentWeaponStates);
-    //console.log('Updated weapon states:', currentWeaponStates);
-
-    // Generate modal message
-    const modalMessage = orders.map((order) => {
-      const { weaponType, location, weaponIndex, action } = order;
-      /*       const weaponKey = `${weaponType}-${location}-Weapon${weaponIndex + 1}`; */
-      /*       const isLoaded = currentWeaponStates[weaponKey]; */
-      const weaponData =
-        weaponType === 'Cannon'
-          ? shipData.weapons.cannons.statBlock
-          : shipData.weapons.ballistae.statBlock;
-
-      return `${action} ${weaponType} on ${location}, Weapon #${weaponIndex + 1}
-        Roll To-Hit: d20 + ${weaponData.toHit}
-        Damage: ${weaponData.damageDiceNumber}d${weaponData.damageDiceType} ${weaponData.damageType}`;
-    });
-
-    // Show modal
-    alert(`Orders executed successfully:\n\n${modalMessage.join('\n\n')}`);
+    } catch (error) {
+      console.error("Error updating orders:", error);
+    }
   };
 
   const masterGunnerPanel = () => {
+    const MasterGunnerOrdersPanel = () => {
+      return (
+        <div className="master-gunner-orders-panel">
+          <div className="gunner-actions"><strong>Actions Remaining:</strong> {actionsRemaining} / {weaponsActionsPerTurn}</div>
+          <ul>
+            {orders.map((order, index) => (
+              <li key={index}>
+                {order.action}{" "}{order.location}{" "}{order.weaponType}{" #"}{order.weaponIndex + 1}
+                <button onClick={() => removeOrder(index)}>❌</button>
+              </li>
+            ))}
+          </ul>
+          <button className="gunner-orders-button" onClick={executeOrders} disabled={orders.length === 0}>
+            Give the Order!
+          </button>
+        </div>
+      )
+    };
+
     return (
-      <div className="role-utility-panel">
-        <div className="master-gunner-panel">
-          <div className="master-gunner-panel-left">
-            <h3>
-              Ship Weapons
-            </h3>
-            <div>
-              <strong>Ballistae:</strong> {totalBallistae}
-            </div>
-            <div>
-              <strong>Cannons:</strong> {totalCannons}
-            </div>
-            <hr /> {/* -------------------------------------- */}
-            <h3>
-              Weapon Stats
-            </h3>
-            {ballistaWeaponStats()}
-            {cannonWeaponStats()}
-            <hr /> {/* -------------------------------------- */}
-            <h3>
-              Ammo Onboard
-            </h3>
-            <div>
-              <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
-            </div>
-            <div>
-              <strong>Cannonballs:</strong> {totalCannonballsStandard}
-            </div>
-            <hr /> {/* -------------------------------------- */}
-            <h3>
-              Weapons Crew
-            </h3>
-            <div>
-              <strong>Weapons Actions / Turn:</strong> {weaponsActionsPerTurn}
-            </div>
-          </div>
-          <div className="master-gunner-panel-right">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
-              <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Main Deck</text>
-              {renderWeapons(shipData.weapons.ballistae.mainDeck.portSide.weaponData, "main", "port", "ballista")}
-              {renderWeapons(shipData.weapons.cannons.mainDeck.portSide.weaponData, "main", "port", "cannon")}
-              {renderWeapons(shipData.weapons.ballistae.mainDeck.starboardSide.weaponData, "main", "starboard", "ballista")}
-              {renderWeapons(shipData.weapons.cannons.mainDeck.starboardSide.weaponData, "main", "starboard", "cannon")}
-            </svg>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
-              <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
-              <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Lower Deck</text>
-              {renderWeapons(shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData, "lower", "starboard", "ballista")}
-              {renderWeapons(shipData.weapons.cannons.lowerDeck.starboardSide.weaponData, "lower", "starboard", "cannon")}
-              {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
-              {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
-            </svg>
-            <div className="master-gunner-orders-panel">
+      <>
+        <div className="role-utility-panel">
+          <div className="master-gunner-panel">
+            <div className="master-gunner-panel-left">
+              <h3>
+                Ship Weapons
+              </h3>
               <div>
-                <div><strong>Actions Remaining:</strong> {actionsRemaining} / {weaponsActionsPerTurn}</div>
-                <ul>
-                  {orders.map((order, index) => (
-                    <li key={index}>
-                      {order.action} {order.weaponType} on {order.location}
-                      <button onClick={() => removeOrder(index)}>❌</button>
-                    </li>
-                  ))}
-                </ul>
+                <strong>Ballistae:</strong> {totalBallistae}
               </div>
-              <button onClick={executeOrders} disabled={orders.length === 0}>
-                Give the Order!
-              </button>
+              <div>
+                <strong>Cannons:</strong> {totalCannons}
+              </div>
+              <hr /> {/* -------------------------------------- */}
+              <h3>
+                Weapon Stats
+              </h3>
+              {ballistaWeaponStats()}
+              {cannonWeaponStats()}
+              <hr /> {/* -------------------------------------- */}
+              <h3>
+                Ammo Onboard
+              </h3>
+              <div>
+                <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
+              </div>
+              <div>
+                <strong>Cannonballs:</strong> {totalCannonballsStandard}
+              </div>
+              <hr /> {/* -------------------------------------- */}
+              <h3>
+                Weapons Crew
+              </h3>
+              <div>
+                <strong>Weapons Actions / Turn:</strong> {weaponsActionsPerTurn}
+              </div>
+            </div>
+            <div className="master-gunner-panel-right">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
+                <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Main Deck</text>
+                {renderWeapons(shipData.weapons.ballistae.mainDeck.portSide.weaponData, "main", "port", "ballista")}
+                {renderWeapons(shipData.weapons.cannons.mainDeck.portSide.weaponData, "main", "port", "cannon")}
+                {renderWeapons(shipData.weapons.ballistae.mainDeck.starboardSide.weaponData, "main", "starboard", "ballista")}
+                {renderWeapons(shipData.weapons.cannons.mainDeck.starboardSide.weaponData, "main", "starboard", "cannon")}
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="850px" height="240px" style={{ background: "#00000000" }}>
+                <path id="Bow" d="M220,10 L160,10 C120,10,40,60,40,120 C40,180,120,230,160,230 L220,230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <line id="Port" x1="220" y1="230" x2="740" y2="230" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <line id="Starboard" x1="220" y1="10" x2="740" y2="10" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <path id="Stern" d="M740,10 H840 C860,10,880,30,880,50 V190 C880,210,860,230,840,230 H740" fill="none" stroke="grey" strokeMiterlimit="1" strokeWidth="4" />
+                <text x="500" y="120" stroke="grey" fill="grey" textAnchor="middle" dominantBaseline="middle" className="ship-svg-large-text">Lower Deck</text>
+                {renderWeapons(shipData.weapons.ballistae.lowerDeck.starboardSide.weaponData, "lower", "starboard", "ballista")}
+                {renderWeapons(shipData.weapons.cannons.lowerDeck.starboardSide.weaponData, "lower", "starboard", "cannon")}
+                {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
+                {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
+              </svg>
             </div>
           </div>
         </div>
-      </div>
+        {activeRole === "Master Gunner" && activeRoleTab === 2 && MasterGunnerOrdersPanel()}
+      </>
     );
   };
 
 
 
   const shipDeploymentDashboard = () => {
+    function resetMasterGunnerOrders() {
+      setActionsRemaining(weaponsActionsPerTurn);
+      setOrders([]);
+    };
     return (
       <div className="card">
         <div className="ship-deployments">
@@ -1345,7 +1387,10 @@ const ShipDashboard = () => {
               <button
                 key={role.name}
                 className={`tab-button ${activeRole === role.name ? 'active' : ''}`}
-                onClick={() => handleActiveRoleChange(role.name)}
+                onClick={() => {
+                  handleActiveRoleChange(role.name);
+                  resetMasterGunnerOrders();
+                }}
               >
                 {role.name}
               </button>
@@ -1357,19 +1402,28 @@ const ShipDashboard = () => {
             <div className="role-tabs-navigation">
               <button
                 className={`role-tab-button ${activeRoleTab === 0 ? 'active' : ''}`}
-                onClick={() => setActiveRoleTab(0)}
+                onClick={() => {
+                  setActiveRoleTab(0);
+                  resetMasterGunnerOrders();
+                }}
               >
                 Features
               </button>
               <button
                 className={`role-tab-button ${activeRoleTab === 1 ? 'active' : ''}`}
-                onClick={() => setActiveRoleTab(1)}
+                onClick={() => {
+                  setActiveRoleTab(1);
+                  resetMasterGunnerOrders();
+                }}
               >
                 Actions
               </button>
               <button
                 className={`role-tab-button ${activeRoleTab === 2 ? 'active' : ''}`}
-                onClick={() => setActiveRoleTab(2)}
+                onClick={() => {
+                  setActiveRoleTab(2);
+                  resetMasterGunnerOrders();
+                }}
               >
                 {getRolePanelTitle(activeRole)}
               </button>

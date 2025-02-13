@@ -3,6 +3,8 @@ import { useShipData } from '../data/shipData';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { keyframes } from "@mui/system";
+import { Button } from '@mui/material';
 
 const AdminPanel = () => {
   const { shipData, setShipData } = useShipData();
@@ -32,6 +34,7 @@ const AdminPanel = () => {
   const [incomingAttackRollValue, setIncomingAttackRollValue] = useState(0);
   const [incomingDamageRollValue, setIncomingDamageRollValue] = useState(0);
   const [incomingDamageDirection, setIncomingDamageDirection] = useState("");
+  const [attackRequestModalOpen, setAttackRequestModalOpen] = useState(false);
 
   const correctPassword = 'KeithBaker';
 
@@ -1625,9 +1628,12 @@ const AdminPanel = () => {
 
     return (
       <div className="incoming-damage-container">
-        <button onClick={handleIncomingDamageButtonClick}>
+        <Button
+          variant="contained"
+          onClick={handleIncomingDamageButtonClick}
+        >
           {"💥 Incoming Damage"}
-        </button>
+        </Button>
         {incomingDamageModalOpen && (
           <div className="incoming-damage-modal">
             <button
@@ -1742,7 +1748,46 @@ const AdminPanel = () => {
         )}
       </div>
     );
-  }
+  };
+
+  const attackRequest = () => {
+
+    const handleAttackRequestButtonClick = () => {
+      console.log("Attack Request Button Clicked");
+      setAttackRequestModalOpen(true);
+    };
+
+    const flash = keyframes`
+      0% { background-color: #323232; }
+      50% { background-color: red; }
+      100% { background-color: #323232; }
+      `;
+
+    return (
+      <div className="attack-request-container">
+        <Button
+          sx={{ animation: `${flash} 2s infinite` }}
+          variant="contained"
+          onClick={handleAttackRequestButtonClick}
+        >
+          {"🗯 Weapons Orders Issued!"}
+        </Button>
+        {attackRequestModalOpen && (
+          <div className="attack-request-modal">
+            <button
+              className="close-modal-button"
+              onClick={() => {
+                setAttackRequestModalOpen(false);
+              }}
+            >
+              X
+            </button>
+            <h1>Attack Request</h1>
+          </div>
+        )}
+      </div>
+    )
+  };
 
   return (
     <>
@@ -1764,6 +1809,7 @@ const AdminPanel = () => {
               <div className="admin-panel-header">
                 <div className="admin-header-buttons-left">
                   {incomingDamage()}
+                  {shipData.gunnerOrders.ordersPending && attackRequest()}
                 </div>
                 <div className="admin-header-buttons-right">
                   <button className="firebase-button" onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>

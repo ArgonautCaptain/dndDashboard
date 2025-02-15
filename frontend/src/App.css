@@ -1026,6 +1026,21 @@ ul li {
   padding: 25px;
 }
 
+.ammo-selection-window {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 200px;
+  width: 400px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  border: solid 2px red;
+  border-radius: 10px;
+  z-index: 1000;
+  padding: 25px;
+}
+
 .approved-orders-table {
   font-size: 1rem;
   margin: 25px;
@@ -1074,7 +1089,7 @@ table {
 }
 
 .orders-request-panel li {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 300;
   margin: 25px;
 }

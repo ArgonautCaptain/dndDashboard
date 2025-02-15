@@ -1902,6 +1902,46 @@ const AdminPanel = () => {
     )
   };
 
+  const endTurn = () => {
+    const handleEndTurnButtonClick = async () => {
+      console.log("End Turn Button Clicked");
+      if (shipData.gunnerOrders.gunnerTurnEnded === false || shipData.gunnerOrders.actionsRemaining > 0) {
+        const confirmEndTurn = window.confirm("The gunner has not ended his turn. Do you want to continue?");
+        if (!confirmEndTurn) {
+          return;
+        }
+      }
+      try {
+        const shipRef = doc(db, "ships", "scarlet-fury");
+        await updateDoc(shipRef, {
+          [`gunnerOrders.actionsRemaining`]: shipData.gunnerOrders.actionsBaseTotal,
+          [`gunnerOrders.actionsCurrentTotal`]: shipData.gunnerOrders.actionsBaseTotal,
+          [`gunnerOrders.requestedOrdersArePending`]: false,
+          [`gunnerOrders.approvedOrdersArePending`]: false,
+          [`gunnerOrders.gunnerTurnEnded`]: false,
+          [`gunnerOrders.orderRequest`]: [],
+          [`gunnerOrders.orderApproved`]: [],
+        });
+        console.log("End Turn Button Clicked, resetting actions remaining and pending orders");
+      } catch (error) {
+        console.error("Error resetting actions remaining and pending orders:", error);
+      }
+    }
+
+
+    return (
+      <div className="end-turn-container">
+        <Button
+          variant="contained"
+          onClick={handleEndTurnButtonClick}
+        >
+          {"🏁 End Turn"}
+        </Button>
+      </div>
+    )
+  }
+
+
   return (
     <>
       {shipData &&
@@ -1923,6 +1963,7 @@ const AdminPanel = () => {
                 <div className="admin-header-buttons-left">
                   {incomingDamage()}
                   {shipData.gunnerOrders.requestedOrdersArePending && attackRequest()}
+                  {endTurn()}
                 </div>
                 <div className="admin-header-buttons-right">
                   <button className="firebase-button" onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>

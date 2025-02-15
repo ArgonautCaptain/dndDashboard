@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { doc, onSnapshot, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, updateDoc, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -926,11 +926,16 @@ const ShipDashboard = () => {
   }
 
   const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;
+  const totalBallistaeBoltsFlaming = shipData.weapons.ballistae.ammo.boltFlaming.ammoStored;
+  const totalBallistaeBoltsHarpoon = shipData.weapons.ballistae.ammo.boltHarpoon.ammoStored;
   const totalCannonballsStandard = shipData.weapons.cannons.ammo.cannonballStandard.ammoStored;
-  /*
-    const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
-    const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
-   */
+  const totalCannonballsArmorPiercing = shipData.weapons.cannons.ammo.cannonballArmorPiercing.ammoStored;
+  const totalCannonballsChainshot = shipData.weapons.cannons.ammo.cannonballChainshot.ammoStored;
+  const totalCannonballsInfernoShell = shipData.weapons.cannons.ammo.cannonballInfernoShell.ammoStored;
+  const totalCannonballsSmokeShell = shipData.weapons.cannons.ammo.cannonballSmokeShell.ammoStored;
+  const totalMangonelStonesStandard = shipData.weapons.mangonels.ammo.mangonelStoneStandard.ammoStored;
+  const totalTrebuchetStonesStandard = shipData.weapons.trebuchets.ammo.trebuchetStoneStandard.ammoStored;
+
   const mainDeckBallistaePort = shipData.weapons.ballistae.mainDeck.portSide.weaponData.length;
   const mainDeckBallistaeStarboard = shipData.weapons.ballistae.mainDeck.starboardSide.weaponData.length;
   const lowerDeckBallistaePort = shipData.weapons.ballistae.lowerDeck.portSide.weaponData.length;
@@ -1349,7 +1354,7 @@ const ShipDashboard = () => {
 
     const MasterGunnerApprovedOrdersPanel = () => {
       const handleMasterGunnerApprovedOrdersButtonClick = () => {
-        console.log("Master Gunner Approved Orders Button Clicked!");
+        /* console.log(shipData); */
         setAttackModalOpen(true);
       };
 
@@ -1387,89 +1392,229 @@ const ShipDashboard = () => {
 
         function handleD20RollClick(deck, side, weaponType, weaponIndex, modifier) {
           const tsLinkString = "talespire://dice/" + deck + "%20" + side + "%20" + weaponType + "%20#" + weaponIndex + ":1d20+" + modifier;
-          console.log(tsLinkString);
+          /* console.log(tsLinkString); */
           window.open(tsLinkString);
         }
 
         function handleDamageRollClick(weaponType, diceString) {
           const tsLinkString = "talespire://dice/" + weaponType + "%20Damage:" + diceString;
-          console.log(tsLinkString);
+          /* console.log(tsLinkString); */
           window.open(tsLinkString);
         }
 
         return (
-          <table className="approved-orders-table">
-            <thead>
-              <tr>
-                <th>Weapon:</th>
-                <th>Ammo Loaded:</th>
-                <th>To Hit:</th>
-                <th>Damage:</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentApprovedOrders.map((order, index) => (
-                <tr key={index} className="approved-order-table-item">
-                  <td>
-                    {order.deck
-                      .replace(/([a-z])([A-Z])/g, "$1 $2")
-                      .replace(/^./, (char) => char.toUpperCase())
-                    }
-                    {" "}
-                    {order.side
-                      .replace(/([a-z])([A-Z])/g, "$1 $2")
-                      .replace(/^./, (char) => char.toUpperCase())
-                    }
-                    {" "}
-                    {order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista"}
-                    {" #"}
-                    {order.weaponIndex + 1}
-                  </td>
-                  <td>
-                    {ammoString(order.ammoLoaded)}
-                  </td>
-                  <td>
-                    <span
-                      className="clickable-roll"
-                      onClick={() => {
-                        handleD20RollClick(
-                          order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[0].charAt(0).toUpperCase() + ". " + order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[1],
-                          order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[0].charAt(0).toUpperCase() + ". " + order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[1],
-                          order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
-                          order.weaponIndex + 1,
-                          shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit
-                        )
-                      }}
-                    >
-                      {"(d20 + "}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit}{")"}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className="clickable-roll"
-                      onClick={() => {
-                        handleDamageRollClick(
-                          order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
-                          shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber + "d" + shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType
-                        )
-                      }}
-                    >
-                      {"("}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber}{"d"}
-                      {shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType}{")"}
-                    </span>
-                  </td>
+          <>
+            <table className="approved-orders-table">
+              <thead>
+                <tr>
+                  <th>Weapon:</th>
+                  <th>Ammo Loaded:</th>
+                  <th>To Hit:</th>
+                  <th>Damage:</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentApprovedOrders.filter(order => order.action === "Fire").map((order, index) => (
+                  <tr key={index} className="approved-order-table-item">
+                    <td>
+                      {order.deck
+                        .replace(/([a-z])([A-Z])/g, "$1 $2")
+                        .replace(/^./, (char) => char.toUpperCase())
+                      }
+                      {" "}
+                      {order.side
+                        .replace(/([a-z])([A-Z])/g, "$1 $2")
+                        .replace(/^./, (char) => char.toUpperCase())
+                      }
+                      {" "}
+                      {order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista"}
+                      {" #"}
+                      {order.weaponIndex + 1}
+                    </td>
+                    <td>
+                      {ammoString(order.ammoLoaded)}
+                    </td>
+                    <td>
+                      <span
+                        className="clickable-roll"
+                        onClick={() => {
+                          handleD20RollClick(
+                            order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[0].charAt(0).toUpperCase() + ". " + order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[1],
+                            order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[0].charAt(0).toUpperCase() + ". " + order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[1],
+                            order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
+                            order.weaponIndex + 1,
+                            shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit
+                          )
+                        }}
+                      >
+                        {"(d20 + "}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit}{")"}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className="clickable-roll"
+                        onClick={() => {
+                          handleDamageRollClick(
+                            order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
+                            shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber + "d" + shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType
+                          )
+                        }}
+                      >
+                        {"("}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber}{"d"}
+                        {shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType}{")"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+          </>
         )
       };
 
-      const handleAttackCompleteButtonClick = () => {
-        console.log("Attack Complete Button Clicked!");
-        //TODO - Add logic to reset the gunnerOrders data in Firestore
-        //TODO - Add logic to reset the hasOrders flag for each weapon in Firestore
-        //TODO - Add a confirmation prompt before resetting the data
+      const clearWeaponsHasOrders = async () => {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await runTransaction(db, async (transaction) => {
+            const shipDoc = await transaction.get(shipRef);
+            if (!shipDoc.exists()) throw new Error("Ship data not found!");
+
+            const currentWeaponData = shipDoc.data().weapons;
+
+            // Helper function to update weapon status
+            const updateWeaponData = (weaponData, weaponType) => {
+              if (!weaponData) return []; // Handle undefined or null weaponData
+              return weaponData.map((weapon) => {
+                if (weapon.hasOrders) {
+                  if (weapon.isLoaded) {
+                    // Weapon was fired
+                    return { ...weapon, hasOrders: false, isLoaded: false, loadedWith: "notLoaded" };
+                  } else {
+                    // Weapon was reloaded
+                    let ammoType;
+                    switch (weaponType) {
+                      case "cannons":
+                        ammoType = "cannonballStandard";
+                        break;
+                      case "ballistae":
+                        ammoType = "boltStandard";
+                        break;
+                      case "mangonels":
+                        ammoType = "mangonelStoneStandard";
+                        break;
+                      case "trebuchets":
+                        ammoType = "trebuchetStoneStandard";
+                        break;
+                      default:
+                        ammoType = "notLoaded";
+                    }
+                    return { ...weapon, hasOrders: false, isLoaded: true, loadedWith: ammoType };
+                  }
+                }
+                return weapon;
+              });
+            };
+
+            const updatedWeaponData = {
+              ballistae: {
+                ...currentWeaponData.ballistae,
+                mainDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.ballistae.mainDeck.portSide.weaponData, "ballistae"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.ballistae.mainDeck.starboardSide.weaponData, "ballistae"),
+                  },
+                },
+                lowerDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.ballistae.lowerDeck.portSide.weaponData, "ballistae"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.ballistae.lowerDeck.starboardSide.weaponData, "ballistae"),
+                  },
+                },
+              },
+              cannons: {
+                ...currentWeaponData.cannons,
+                mainDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.cannons.mainDeck.portSide.weaponData, "cannons"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.cannons.mainDeck.starboardSide.weaponData, "cannons"),
+                  },
+                },
+                lowerDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.cannons.lowerDeck.portSide.weaponData, "cannons"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.cannons.lowerDeck.starboardSide.weaponData, "cannons"),
+                  },
+                },
+              },
+              mangonels: {
+                ...currentWeaponData.mangonels,
+                mainDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.mangonels.mainDeck.portSide.weaponData, "mangonels"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.mangonels.mainDeck.starboardSide.weaponData, "mangonels"),
+                  },
+                },
+              },
+              trebuchets: {
+                ...currentWeaponData.trebuchets,
+                mainDeck: {
+                  portSide: {
+                    weaponData: updateWeaponData(currentWeaponData.trebuchets.mainDeck.portSide.weaponData, "trebuchets"),
+                  },
+                  starboardSide: {
+                    weaponData: updateWeaponData(currentWeaponData.trebuchets.mainDeck.starboardSide.weaponData, "trebuchets"),
+                  },
+                },
+              },
+            };
+
+            transaction.update(shipRef, { weapons: updatedWeaponData });
+          });
+        } catch (error) {
+          console.error("Error clearing weapons hasOrders:", error);
+        }
+      };
+
+      const clearOrders = async () => {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.orderApproved`]: [],
+          });
+          await updateDoc(shipRef, {
+            [`gunnerOrders.approvedOrdersArePending`]: false,
+          });
+          await updateDoc(shipRef, {
+            [`gunnerOrders.gunnerTurnEnded`]: true,
+          });
+          setAttackModalOpen(false);
+        } catch (error) {
+          console.error("Error clearing orders:", error);
+        }
+      };
+
+      const handleAttackCompleteButtonClick = async () => {
+        if (shipData.gunnerOrders.actionsRemaining !== 0) {
+          const confirmEndGunnerTurn = window.confirm("You still have actions remaining this turn. Are you sure you want to end your turn?");
+          if (!confirmEndGunnerTurn) return;
+        }
+        await clearWeaponsHasOrders();
+        await clearOrders();
+
+
+        // Add logic to reset the gunnerOrders data in Firestore
+        // Add logic to reset the hasOrders flag for each weapon in Firestore
       };
 
       return (
@@ -1500,7 +1645,7 @@ const ShipDashboard = () => {
                 className="attack-complete-button"
                 onClick={handleAttackCompleteButtonClick}
               >
-                Attacks Complete
+                Weapon Actions Complete
               </button>
             </div>
           )}
@@ -1532,12 +1677,56 @@ const ShipDashboard = () => {
               <h3>
                 Ammo Onboard
               </h3>
-              <div>
-                <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
-              </div>
-              <div>
-                <strong>Cannonballs:</strong> {totalCannonballsStandard}
-              </div>
+              {totalBallistaeBoltsStandard > 0 && (
+                <div>
+                  <strong>Ballista Bolts:</strong> {totalBallistaeBoltsStandard}
+                </div>
+              )}
+              {totalBallistaeBoltsFlaming > 0 && (
+                <div>
+                  <strong>Flaming Ballista Bolts:</strong> {totalBallistaeBoltsFlaming}
+                </div>
+              )}
+              {totalBallistaeBoltsHarpoon > 0 && (
+                <div>
+                  <strong>Harpoon Ballista Bolts:</strong> {totalBallistaeBoltsHarpoon}
+                </div>
+              )}
+              {totalCannonballsStandard > 0 && (
+                <div>
+                  <strong>Cannonballs:</strong> {totalCannonballsStandard}
+                </div>
+              )}
+              {totalCannonballsArmorPiercing > 0 && (
+                <div>
+                  <strong>Armor Piercing Cannonballs:</strong> {totalCannonballsArmorPiercing}
+                </div>
+              )}
+              {totalCannonballsChainshot > 0 && (
+                <div>
+                  <strong>Chainshot Cannonballs:</strong> {totalCannonballsChainshot}
+                </div>
+              )}
+              {totalCannonballsInfernoShell > 0 && (
+                <div>
+                  <strong>Inferno Shell Cannonballs:</strong> {totalCannonballsInfernoShell}
+                </div>
+              )}
+              {totalCannonballsSmokeShell > 0 && (
+                <div>
+                  <strong>Smoke Shell Cannonballs:</strong> {totalCannonballsSmokeShell}
+                </div>
+              )}
+              {totalMangonelStonesStandard > 0 && (
+                <div>
+                  <strong>Mangonel Stones:</strong> {totalMangonelStonesStandard}
+                </div>
+              )}
+              {totalTrebuchetStonesStandard > 0 && (
+                <div>
+                  <strong>Trebuchet Stones:</strong> {totalTrebuchetStonesStandard}
+                </div>
+              )}
               <hr /> {/* -------------------------------------- */}
               <h3>
                 Weapons Crew

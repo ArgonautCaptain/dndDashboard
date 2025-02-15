@@ -1611,10 +1611,6 @@ const ShipDashboard = () => {
         }
         await clearWeaponsHasOrders();
         await clearOrders();
-
-
-        // Add logic to reset the gunnerOrders data in Firestore
-        // Add logic to reset the hasOrders flag for each weapon in Firestore
       };
 
       return (

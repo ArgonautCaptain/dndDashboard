@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useShipData } from '../data/shipData';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase';
 import { keyframes } from "@mui/system";
 import { Button } from '@mui/material';
@@ -1297,6 +1297,7 @@ const AdminPanel = () => {
         <h1>Crew Info</h1>
         <div className="crew-card-lower-container">
           <div className="crew-left-container">
+            <h2>Crew Onboard:</h2>
             <p><strong>Command Crew: </strong>
               <span className="clickable-stat" onClick={() => handleCrewStatClick("soulsOnboard", "commandCrew", shipData.soulsOnboard.commandCrew)}>
                 {shipData.soulsOnboard.commandCrew}
@@ -1763,6 +1764,114 @@ const AdminPanel = () => {
       100% { background-color: #323232; }
       `;
 
+    const ordersPanel = () => {
+      const pendingOrders = shipData.gunnerOrders.orderRequest;
+
+      //clean up function to set pending orders to false if there are no pending orders
+      if (pendingOrders.length === 0 && shipData.gunnerOrders.requestedOrdersArePending === true) {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          updateDoc(shipRef, {
+            [`gunnerOrders.requestedOrdersArePending`]: false,
+          });
+          console.log("No pending orders, setting requestedOrdersArePending to false");
+        } catch (error) {
+          console.error("Error changing requestedOrdersArePending to false:", error);
+        }
+      };
+      //clean up function to set approved orders to false if there are no approved orders
+      if (shipData.gunnerOrders.orderApproved.length === 0 && shipData.gunnerOrders.approvedOrdersArePending === true) {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          updateDoc(shipRef, {
+            [`gunnerOrders.approvedOrdersArePending`]: false,
+          });
+          console.log("No approved orders, setting approvedOrdersArePending to false");
+        } catch (error) {
+          console.error("Error changing approvedOrdersArePending to false:", error);
+        }
+      };
+
+      const handleApproveClick = async (index) => {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.orderApproved`]: arrayUnion(pendingOrders[index]),
+          });
+        } catch (error) {
+          console.error("Error adding approved gunner order to orderApproved:", error);
+        }
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.orderRequest`]: arrayRemove(pendingOrders[index]),
+          });
+        } catch (error) {
+          console.error("Error removing approved gunner order from orderRequest:", error);
+        }
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.approvedOrdersArePending`]: true,
+          });
+        } catch (error) {
+          console.error("Error changing approvedOrdersArePending to true:", error);
+        }
+      };
+
+      const handleDenyClick = async (index) => {
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.orderRequest`]: arrayRemove(pendingOrders[index]),
+          });
+        } catch (error) {
+          console.error("Error removing approved gunner order from orderRequest:", error);
+        }
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.actionsRemaining`]: shipData.gunnerOrders.actionsRemaining + 1,
+          });
+        } catch (error) {
+          console.error("Error updating actions remaining:", error);
+        }
+      };
+
+      return (
+        <div className="orders-request-panel">
+          <h2>Orders Pending:</h2>
+          <ul>
+            {pendingOrders.map((order, index) => (
+              <li key={index}>
+                <p>
+                  Action: {order.action}
+                </p>
+                <p>
+                  Weapon Type: {order.weaponTypeGroup}
+                </p>
+                <p>
+                  Ammo Type: {order.ammoLoaded}
+                </p>
+                <p>
+                  Deck: {order.deck}
+                </p>
+                <p>
+                  Side: {order.side}
+                </p>
+
+                <p>
+                  Weapon Index: {order.weaponIndex}
+                </p>
+                <button onClick={() => handleApproveClick(index)}>✅</button>
+                <button onClick={() => handleDenyClick(index)}>❌</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    };
+
     return (
       <div className="attack-request-container">
         <Button
@@ -1783,6 +1892,10 @@ const AdminPanel = () => {
               X
             </button>
             <h1>Attack Request</h1>
+            <hr />
+            <div className="attack-request-modal-body">
+              {ordersPanel()}
+            </div>
           </div>
         )}
       </div>
@@ -1809,7 +1922,7 @@ const AdminPanel = () => {
               <div className="admin-panel-header">
                 <div className="admin-header-buttons-left">
                   {incomingDamage()}
-                  {shipData.gunnerOrders.ordersPending && attackRequest()}
+                  {shipData.gunnerOrders.requestedOrdersArePending && attackRequest()}
                 </div>
                 <div className="admin-header-buttons-right">
                   <button className="firebase-button" onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>

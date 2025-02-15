@@ -7,6 +7,8 @@ import Tooltip from '@mui/material/Tooltip';
 import { Box } from '@mui/material';
 import deploymentFeatures from '../data/deploymentFeatures.json'
 import TSAbilityRollSpan from '../components/tsAbilityRollSpan';
+import { keyframes } from "@mui/system";
+import { Button } from '@mui/material';
 
 
 const ShipDashboard = () => {
@@ -14,6 +16,7 @@ const ShipDashboard = () => {
   const [roles, setRoles] = useState([]);
   const [activeRoleTab, setActiveRoleTab] = useState(0);
   const [orders, setOrders] = useState([]); // Empty orders list
+  const [attackModalOpen, setAttackModalOpen] = useState(false);
 
 
   // Real-time listener for Firestore updates
@@ -50,8 +53,8 @@ const ShipDashboard = () => {
     return () => unsubscribe(); // Cleanup listener on component unmount
   }, []);
 
-  const weaponsActionsPerTurn = shipData ? Math.floor(shipData.soulsOnboard.weaponsCrew / 2) + 1 : 0;
-  const [actionsRemaining, setActionsRemaining] = useState(0);
+  const weaponsActionsPerTurn = shipData ? shipData.gunnerOrders.actionsCurrentTotal : 0;
+  const weaponsActionsRemaining = shipData ? shipData.gunnerOrders.actionsRemaining : 0;
 
   // Calculate ship sailing speed
   const calculatedSpeed = (baseSpeed, currentHP, maxHP) => {
@@ -1159,7 +1162,7 @@ const ShipDashboard = () => {
     return icons;
   };
 
-  const addOrder = (action, weaponType, weaponTypeGroup, locationString, deck, side, weaponIndex) => {
+  const addOrder = async (action, weaponType, weaponTypeGroup, locationString, deck, side, weaponIndex) => {
 
     const newOrder = { action, weaponType, locationString, weaponIndex };
     const isDuplicateOrder = orders.some(
@@ -1169,24 +1172,51 @@ const ShipDashboard = () => {
         order.locationString === newOrder.locationString &&
         order.weaponIndex === newOrder.weaponIndex
     );
+    const alreadyHasOrders = shipData.weapons[weaponTypeGroup][deck][side].weaponData[weaponIndex].hasOrders;
 
-    if (!isDuplicateOrder) {
-      if (actionsRemaining > 0) {
+    if (!isDuplicateOrder && !alreadyHasOrders) {
+      if (weaponsActionsRemaining > 0) {
         setOrders([...orders, newOrder]);
-        setActionsRemaining((prev) => prev - 1);
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
+          await updateDoc(shipRef, {
+            [`gunnerOrders.actionsRemaining`]: weaponsActionsRemaining - 1,
+          });
+        } catch (error) {
+          console.error("Error updating actions remaining:", error);
+        }
+        try {
+          const shipRef = doc(db, "ships", "scarlet-fury");
 
-        setShipData((prevShipData) => {
-          const updatedShipData = { ...prevShipData };
-          const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
-          if (weaponPath) {
-            weaponPath.hasOrders = true;
+          // Get the current weaponData array from Firestore
+          const shipSnapshot = await getDoc(shipRef);
+          if (!shipSnapshot.exists()) throw new Error("Ship data not found!");
+
+          const currentWeaponData = shipSnapshot.data().weapons[weaponTypeGroup][deck][side].weaponData;
+
+          // Ensure index is valid
+          if (!currentWeaponData || weaponIndex < 0 || weaponIndex >= currentWeaponData.length) {
+            throw new Error("Invalid weapon index.");
+          }
+
+          // Clone the array and update the specific entry
+          const updatedWeaponData = [...currentWeaponData];
+          updatedWeaponData[weaponIndex] = {
+            ...updatedWeaponData[weaponIndex],
+            hasOrders: true,
           };
-          return updatedShipData;
-        });
+
+          // Update Firestore with the full modified array
+          await updateDoc(shipRef, {
+            [`weapons.${weaponTypeGroup}.${deck}.${side}.weaponData`]: updatedWeaponData,
+          });
+        } catch (error) {
+          console.error("Error updating weapon data:", error);
+        }
       } else {
-        alert("You have no actions remaining");
+        alert("You have no actions remaining this turn!");
       }
-    } else {
+    } else if (isDuplicateOrder) {
       const orderIndex = orders.findIndex(
         (order) =>
           order.action === newOrder.action &&
@@ -1195,12 +1225,14 @@ const ShipDashboard = () => {
           order.weaponIndex === newOrder.weaponIndex
       );
       removeOrder(orderIndex);
+    } else if (alreadyHasOrders) {
+      alert("This weapon already has orders submitted this turn!");
     }
 
   };
 
 
-  const removeOrder = (index) => {
+  const removeOrder = async (index) => {
     const currentLocationString = orders[index].locationString;
     const weaponTypeGroup = orders[index].weaponType === "Cannon" ? "cannons" : "ballistae";
     const deck = currentLocationString.split(" ")[0].toLowerCase() + "Deck";
@@ -1208,16 +1240,42 @@ const ShipDashboard = () => {
     const weaponIndex = orders[index].weaponIndex;
 
     setOrders((prevOrders) => prevOrders.filter((_, i) => i !== index));
-    setActionsRemaining((prev) => prev + 1);
+    try {
+      const shipRef = doc(db, "ships", "scarlet-fury");
+      await updateDoc(shipRef, {
+        [`gunnerOrders.actionsRemaining`]: weaponsActionsRemaining + 1,
+      });
+    } catch (error) {
+      console.error("Error updating actions remaining:", error);
+    }
+    try {
+      const shipRef = doc(db, "ships", "scarlet-fury");
 
-    setShipData((prevShipData) => {
-      const updatedShipData = { ...prevShipData };
-      const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
-      if (weaponPath) {
-        weaponPath.hasOrders = false;
+      // Get the current weaponData array from Firestore
+      const shipSnapshot = await getDoc(shipRef);
+      if (!shipSnapshot.exists()) throw new Error("Ship data not found!");
+
+      const currentWeaponData = shipSnapshot.data().weapons[weaponTypeGroup][deck][side].weaponData;
+
+      // Ensure index is valid
+      if (!currentWeaponData || weaponIndex < 0 || weaponIndex >= currentWeaponData.length) {
+        throw new Error("Invalid weapon index.");
+      }
+
+      // Clone the array and update the specific entry
+      const updatedWeaponData = [...currentWeaponData];
+      updatedWeaponData[weaponIndex] = {
+        ...updatedWeaponData[weaponIndex],
+        hasOrders: false,
       };
-      return updatedShipData;
-    });
+
+      // Update Firestore with the full modified array
+      await updateDoc(shipRef, {
+        [`weapons.${weaponTypeGroup}.${deck}.${side}.weaponData`]: updatedWeaponData,
+      });
+    } catch (error) {
+      console.error("Error updating weapon data:", error);
+    }
   };
 
 
@@ -1228,18 +1286,20 @@ const ShipDashboard = () => {
       const weaponTypeGroup = weaponType === "Cannon" ? "cannons" : "ballistae";
       const deck = locationString.split(" ")[0].toLowerCase() + "Deck";
       const side = locationString.split(" ")[2].toLowerCase() + "Side";
+      const ammoLoaded = shipData.weapons[weaponTypeGroup][deck][side].weaponData[weaponIndex].loadedWith;
       ordersToSubmit.push({
         weaponTypeGroup,
         deck,
         side,
         weaponIndex,
-        action
+        action,
+        ammoLoaded,
       });
 
-      console.log(`Executing ${action} order for ${weaponType} index ${weaponIndex} on the ${locationString}`);
+      /* console.log(`Executing ${action} order for ${weaponType} index ${weaponIndex} on the ${locationString}`); */
     });
 
-    console.log(ordersToSubmit);
+    /* console.log(ordersToSubmit); */
 
     try {
       const shipRef = doc(db, "ships", "scarlet-fury");
@@ -1247,7 +1307,7 @@ const ShipDashboard = () => {
       const shipSnapshot = await getDoc(shipRef);
       if (!shipSnapshot.exists()) throw new Error("Ship data not found!");
       const currentOrdersData = shipSnapshot.data().gunnerOrders;
-      if (currentOrdersData.ordersPending === true) {
+      if (currentOrdersData.requestedOrdersArePending === true) {
         alert("There are already orders in the queue. Please wait for the current orders to be executed.");
         return;
       } else {
@@ -1255,24 +1315,9 @@ const ShipDashboard = () => {
           [`gunnerOrders.orderRequest`]: ordersToSubmit,
         });
         await updateDoc(shipRef, {
-          [`gunnerOrders.ordersPending`]: true,
-        });
-        orders.forEach((order) => {
-          setShipData((prevShipData) => {
-            const { weaponIndex, locationString, weaponType } = order;
-            const weaponTypeGroup = weaponType === "Cannon" ? "cannons" : "ballistae";
-            const deck = locationString.split(" ")[0].toLowerCase() + "Deck";
-            const side = locationString.split(" ")[2].toLowerCase() + "Side";
-            const updatedShipData = { ...prevShipData };
-            const weaponPath = updatedShipData.weapons[weaponTypeGroup]?.[deck]?.[side]?.weaponData[weaponIndex];
-            if (weaponPath) {
-              weaponPath.hasOrders = false;
-            };
-            return updatedShipData;
-          });
+          [`gunnerOrders.requestedOrdersArePending`]: true,
         });
         setOrders([]);
-        setActionsRemaining(weaponsActionsPerTurn);
       }
     } catch (error) {
       console.error("Error updating orders:", error);
@@ -1280,14 +1325,16 @@ const ShipDashboard = () => {
   };
 
   const masterGunnerPanel = () => {
+
+
     const MasterGunnerOrdersPanel = () => {
       return (
         <div className="master-gunner-orders-panel">
-          <div className="gunner-actions"><strong>Actions Remaining:</strong> {actionsRemaining} / {weaponsActionsPerTurn}</div>
+          <div className="gunner-actions"><strong>Actions Remaining This Turn: </strong>{weaponsActionsRemaining}{" / "}{weaponsActionsPerTurn}</div>
           <ul>
             {orders.map((order, index) => (
               <li key={index}>
-                {order.action}{" "}{order.location}{" "}{order.weaponType}{" #"}{order.weaponIndex + 1}
+                {order.action}{" "}{order.locationString}{" "}{order.weaponType}{" #"}{order.weaponIndex + 1}
                 <button onClick={() => removeOrder(index)}>❌</button>
               </li>
             ))}
@@ -1298,6 +1345,167 @@ const ShipDashboard = () => {
         </div>
       )
     };
+
+    const MasterGunnerApprovedOrdersPanel = () => {
+      const handleMasterGunnerApprovedOrdersButtonClick = () => {
+        console.log("Master Gunner Approved Orders Button Clicked!");
+        setAttackModalOpen(true);
+      };
+
+      const flash = keyframes`
+      0% { background-color: #323232; }
+      50% { background-color: red; }
+      100% { background-color: #323232; }
+      `;
+
+      const approvedOrders = () => {
+        const currentApprovedOrders = shipData.gunnerOrders.orderApproved;
+
+        const ammoString = (ammo) => {
+          switch (ammo) {
+            case "boltStandard":
+              return "Standard Bolt";
+            case "boltFlaming":
+              return "Flaming Bolt";
+            case "boltHarpoon":
+              return "Harpoon Bolt";
+            case "cannonballStandard":
+              return "Standard Cannonball";
+            case "cannonballArmorPiercing":
+              return "Armor-Piercing Cannonball";
+            case "cannonballChainshot":
+              return "Chainshot";
+            case "cannonballInfernoShell":
+              return "Inferno Shell";
+            case "cannonballSmokeShell":
+              return "Smoke Shell";
+            default:
+              return "Unknown";
+          };
+        };
+
+        function handleD20RollClick(deck, side, weaponType, weaponIndex, modifier) {
+          const tsLinkString = "talespire://dice/" + deck + "%20" + side + "%20" + weaponType + "%20#" + weaponIndex + ":1d20+" + modifier;
+          console.log(tsLinkString);
+          window.open(tsLinkString);
+        }
+
+        function handleDamageRollClick(weaponType, diceString) {
+          const tsLinkString = "talespire://dice/" + weaponType + "%20Damage:" + diceString;
+          console.log(tsLinkString);
+          window.open(tsLinkString);
+        }
+
+        return (
+          <table className="approved-orders-table">
+            <thead>
+              <tr>
+                <th>Weapon:</th>
+                <th>Ammo Loaded:</th>
+                <th>To Hit:</th>
+                <th>Damage:</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentApprovedOrders.map((order, index) => (
+                <tr key={index} className="approved-order-table-item">
+                  <td>
+                    {order.deck
+                      .replace(/([a-z])([A-Z])/g, "$1 $2")
+                      .replace(/^./, (char) => char.toUpperCase())
+                    }
+                    {" "}
+                    {order.side
+                      .replace(/([a-z])([A-Z])/g, "$1 $2")
+                      .replace(/^./, (char) => char.toUpperCase())
+                    }
+                    {" "}
+                    {order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista"}
+                    {" #"}
+                    {order.weaponIndex + 1}
+                  </td>
+                  <td>
+                    {ammoString(order.ammoLoaded)}
+                  </td>
+                  <td>
+                    <span
+                      className="clickable-roll"
+                      onClick={() => {
+                        handleD20RollClick(
+                          order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[0].charAt(0).toUpperCase() + ". " + order.deck.replace(/([a-z])([A-Z])/g, "$1%20$2").split("%20")[1],
+                          order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[0].charAt(0).toUpperCase() + ". " + order.side.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ")[1],
+                          order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
+                          order.weaponIndex + 1,
+                          shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit
+                        )
+                      }}
+                    >
+                      {"(d20 + "}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].toHit}{")"}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className="clickable-roll"
+                      onClick={() => {
+                        handleDamageRollClick(
+                          order.weaponTypeGroup === "cannons" ? "Cannon" : "Ballista",
+                          shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber + "d" + shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType
+                        )
+                      }}
+                    >
+                      {"("}{shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceNumber}{"d"}
+                      {shipData.weapons[order.weaponTypeGroup].ammo[order.ammoLoaded].damageDiceType}{")"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      };
+
+      const handleAttackCompleteButtonClick = () => {
+        console.log("Attack Complete Button Clicked!");
+        //TODO - Add logic to reset the gunnerOrders data in Firestore
+        //TODO - Add logic to reset the hasOrders flag for each weapon in Firestore
+        //TODO - Add a confirmation prompt before resetting the data
+      };
+
+      return (
+        <div className="master-gunner-approved-orders-wrapper">
+          <Button
+            sx={{ animation: `${flash} 2s infinite` }}
+            variant="contained"
+            className="master-gunner-approved-orders-button"
+            onClick={handleMasterGunnerApprovedOrdersButtonClick}
+          >
+            {"⚔️ Attack Rolls"}
+          </Button>
+          {attackModalOpen && (
+            <div className="attack-modal">
+              <button
+                className="close-modal-button"
+                onClick={() => {
+                  setAttackModalOpen(false);
+                }}
+              >
+                X
+              </button>
+              <h1>Weapon Attacks</h1>
+              <hr />
+              <h2>The DM has approved the following attacks:</h2>
+              {approvedOrders()}
+              <button
+                className="attack-complete-button"
+                onClick={handleAttackCompleteButtonClick}
+              >
+                Attacks Complete
+              </button>
+            </div>
+          )}
+        </div>
+      )
+    }
 
     return (
       <>
@@ -1360,6 +1568,7 @@ const ShipDashboard = () => {
                 {renderWeapons(shipData.weapons.ballistae.lowerDeck.portSide.weaponData, "lower", "port", "ballista")}
                 {renderWeapons(shipData.weapons.cannons.lowerDeck.portSide.weaponData, "lower", "port", "cannon")}
               </svg>
+              {activeRole === "Master Gunner" && activeRoleTab === 2 && shipData.gunnerOrders.approvedOrdersArePending && MasterGunnerApprovedOrdersPanel()}
             </div>
           </div>
         </div>
@@ -1372,7 +1581,6 @@ const ShipDashboard = () => {
 
   const shipDeploymentDashboard = () => {
     function resetMasterGunnerOrders() {
-      setActionsRemaining(weaponsActionsPerTurn);
       setOrders([]);
     };
     return (

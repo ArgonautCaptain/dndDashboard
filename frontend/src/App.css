@@ -1014,9 +1014,9 @@ ul li {
 .attack-modal {
   position: absolute;
   left: 65%;
-  top: 50%;
+  top: 45%;
   transform: translate(-50%, -50%);
-  height: 480px;
+  height: 440px;
   width: 640px;
   background: rgba(0, 0, 0, 0.9);
   color: white;

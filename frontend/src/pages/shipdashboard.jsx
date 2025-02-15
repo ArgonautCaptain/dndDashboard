@@ -1325,7 +1325,8 @@ const ShipDashboard = () => {
   };
 
   const masterGunnerPanel = () => {
-
+    //TODO: Allow other roles to use their action to assist with Weapons, giving the Master Gunner an additional Weapon Action for that turn
+    //TODO: Allow the Personnel Officer to assign Miscellaneous Crew to assist with Weapons or Navigation
 
     const MasterGunnerOrdersPanel = () => {
       return (

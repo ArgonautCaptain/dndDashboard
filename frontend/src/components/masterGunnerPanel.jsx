@@ -18,6 +18,10 @@ const MasterGunnerPanel = ({ shipData, activeRole, activeRoleTab }) => {
   const [orders, setOrders] = useState([]); // Empty orders list
   const [attackModalOpen, setAttackModalOpen] = useState(false);
 
+  if (activeRole !== "Master Gunner") {
+    return null;
+  }
+
   const weaponsActionsPerTurn = shipData ? shipData.gunnerOrders.actionsCurrentTotal : 0;
   const weaponsActionsRemaining = shipData ? shipData.gunnerOrders.actionsRemaining : 0;
   const totalBallistaeBoltsStandard = shipData.weapons.ballistae.ammo.boltStandard.ammoStored;

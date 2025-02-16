@@ -431,6 +431,7 @@ input {
   padding-top: 10px;
   height: 87.5%;
   overflow-y: auto;
+  width: 100%;
 }
 
 .role-dashboard {

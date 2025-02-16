@@ -1,7 +1,8 @@
 import getDamageColor from '../utils/getDamageColor';
+import PropTypes from 'prop-types';
 
-const BoatswainPanel = (shipData, activeRole) => {
-  if (activeRole !== 'Boatswain') {
+const BoatswainPanel = ({ shipData, activeRole }) => {
+  if (activeRole !== "Boatswain") {
     return null;
   }
 
@@ -23,8 +24,7 @@ const BoatswainPanel = (shipData, activeRole) => {
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 900 240"
-        width="900px"
-        height="240px"
+        className="ship-damage-report-svg"
         style={{ background: "#00000000" }}
       >
         {/* Bow Hull */}
@@ -244,6 +244,33 @@ const BoatswainPanel = (shipData, activeRole) => {
       </svg>
     </div>
   )
+};
+BoatswainPanel.propTypes = {
+  shipData: PropTypes.shape({
+    hull: PropTypes.shape({
+      hullBow: PropTypes.number.isRequired,
+      hullBowMax: PropTypes.number.isRequired,
+      hullPort: PropTypes.number.isRequired,
+      hullPortMax: PropTypes.number.isRequired,
+      hullStarboard: PropTypes.number.isRequired,
+      hullStarboardMax: PropTypes.number.isRequired,
+      hullStern: PropTypes.number.isRequired,
+      hullSternMax: PropTypes.number.isRequired,
+    }).isRequired,
+    movementSails: PropTypes.shape({
+      sailForeHP: PropTypes.number.isRequired,
+      sailForeMaxHP: PropTypes.number.isRequired,
+      sailMainHP: PropTypes.number.isRequired,
+      sailMainMaxHP: PropTypes.number.isRequired,
+      sailAftHP: PropTypes.number.isRequired,
+      sailAftMaxHP: PropTypes.number.isRequired,
+    }).isRequired,
+    helmControl: PropTypes.shape({
+      hitPoints: PropTypes.number.isRequired,
+      maxHP: PropTypes.number.isRequired,
+    }).isRequired,
+  }).isRequired,
+  activeRole: PropTypes.string.isRequired,
 };
 
 export default BoatswainPanel;

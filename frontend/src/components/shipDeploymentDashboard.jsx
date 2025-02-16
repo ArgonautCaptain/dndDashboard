@@ -71,7 +71,7 @@ const ShipDeploymentDashboard = ({ shipData, roles, activeRole, handleSetActiveR
           <div className="role-tab-content">
             {activeRoleTab === 2 && (
               <>
-                <BoatswainPanel shipData={shipData} activeRole={activeRole} />
+                <BoatswainPanel shipData={shipData} activeRole={activeRole} activeRoleTab={activeRoleTab} />
                 <MasterGunnerPanel shipData={shipData} activeRole={activeRole} activeRoleTab={activeRoleTab} />
                 {activeRole !== 'Boatswain' && activeRole !== 'Master Gunner' && (
                   <>

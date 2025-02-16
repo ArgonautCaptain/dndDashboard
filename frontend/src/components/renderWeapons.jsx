@@ -25,16 +25,17 @@ const RenderWeapons = (shipData, orders, setOrders, weaponData, deck, side, type
   const lowerDeckWeaponsPort = lowerDeckBallistaePort + lowerDeckCannonsPort;
   const lowerDeckWeaponsStarboard = lowerDeckBallistaeStarboard + lowerDeckCannonsStarboard;
   const initialOffset = (30 * (6 - (isMainDeck ? (isPort ? mainDeckWeaponsPort : mainDeckWeaponsStarboard) : (isPort ? lowerDeckWeaponsPort : lowerDeckWeaponsStarboard))));
+  const xOffsetTracker = {
+    main: { port: 0, starboard: 0 },
+    lower: { port: 0, starboard: 0 },
+  };
   const startX = 250 + initialOffset + xOffsetTracker[deck][side];
   const startY = isMainDeck ? (isPort ? 162 : -7) : (isPort ? 162 : -7);
   const iconSpacing = 80;
   const width = 65;
   const height = 80;
   const viewBox = type === "cannon" ? "0 0 31 84" : "0 0 78 65";
-  const xOffsetTracker = {
-    main: { port: 0, starboard: 0 },
-    lower: { port: 0, starboard: 0 },
-  };
+
   const icons = weaponData.map((weapon, i) => {
     const fillColor = weapon.isLoaded ? "lime" : "red";
     const textColor = "white";

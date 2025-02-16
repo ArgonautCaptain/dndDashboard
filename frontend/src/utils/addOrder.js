@@ -14,7 +14,7 @@ const addOrder = async (shipData, orders, setOrders, action, weaponType, weaponT
   );
 
   const alreadyHasOrders = shipData.weapons[weaponTypeGroup][deck][side].weaponData[weaponIndex].hasOrders;
-  const weaponsActionsRemaining = shipData.weapons.gunnerOrders.actionsRemaining;
+  const weaponsActionsRemaining = shipData.gunnerOrders?.actionsRemaining;
 
   if (!isDuplicateOrder && !alreadyHasOrders) {
     if (weaponsActionsRemaining > 0) {

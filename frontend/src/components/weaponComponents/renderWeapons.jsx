@@ -1,5 +1,5 @@
 import Tooltip from '@mui/material/Tooltip';
-import addOrder from "../utils/addOrder";
+import addOrder from "../../utils/orderManagement/addOrder";
 
 const RenderWeapons = (shipData, orders, setOrders, weaponData, deck, side, type) => {
   const isPort = side === "port";

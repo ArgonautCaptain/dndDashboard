@@ -1,7 +1,7 @@
 import CircularProgress from '@mui/material/CircularProgress';
 import { Box } from '@mui/material';
-import getProgressColor from '../utils/getProgressColor.js';
-import steeringStatus from '../utils/steeringStatus.js';
+import getProgressColor from '../../utils/getProgressColor.js';
+import steeringStatus from '../../utils/steeringStatus.js';
 
 const HelmCard = (shipData) => {
   // Helper function to calculate dynamic color

@@ -142,13 +142,21 @@ input {
 .master-gunner-orders-panel {
   position: fixed;
   bottom: 50px;
-  right: 100px;
+  right: 50px;
   height: 300px;
-  width: 300px;
+  width: 350px;
   background: rgba(0, 0, 0, 0.9);
   border: solid 2px red;
   border-radius: 10px;
   padding: 25px;
+}
+
+.gunner-actions {
+  font-size: 1.25rem;
+}
+
+.master-gunner-orders-panel h4 {
+  font-size: 1.2rem;
 }
 
 .gunner-orders-button {

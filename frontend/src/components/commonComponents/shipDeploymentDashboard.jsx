@@ -1,6 +1,6 @@
-import BoatswainPanel from "../components/boatswainPanel.jsx";
-import BoatswainActionsPanel from "../components/boatswainActionsPanel.jsx";
-import MasterGunnerPanel from "../components/masterGunnerPanel.jsx";
+import BoatswainPanel from "../deploymentPanels/boatswainPanel.jsx";
+import BoatswainActionsPanel from "../deploymentPanels/boatswainActionsPanel.jsx";
+import MasterGunnerPanel from "../deploymentPanels/masterGunnerPanel.jsx";
 import PropTypes from "prop-types";
 
 const ShipDeploymentDashboard = ({ shipData, roles, activeRole, handleSetActiveRole, activeRoleTab, setActiveRoleTab }) => {

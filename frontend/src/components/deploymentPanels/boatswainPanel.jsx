@@ -1,4 +1,4 @@
-import getDamageColor from '../utils/getDamageColor';
+import getDamageColor from '../../utils/getDamageColor';
 import PropTypes from 'prop-types';
 
 const BoatswainPanel = ({ shipData, activeRole }) => {

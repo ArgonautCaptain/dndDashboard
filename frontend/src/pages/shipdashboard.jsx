@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import ShipTopBar from '../components/shipTopBar.jsx';
-import ShipAbilityScoresCard from '../components/shipAbilityScoresCard.jsx';
-import HelmCard from '../components/helmCard.jsx';
-import SailsCard from '../components/sailsCard.jsx';
-import HullCard from '../components/hullCard.jsx';
-import DefensesConditionsCard from '../components/defensesConditionsCard.jsx';
-import ShipSavingThrowsCard from '../components/shipSavingThrowsCard.jsx';
-import CrewCard from '../components/crewCard.jsx';
-import ShipDeploymentDashboard from '../components/shipDeploymentDashboard.jsx';
-import CommandDiceCard from '../components/commandDiceCard.jsx';
-import HullDiceCard from '../components/hullDiceCard.jsx';
-import CharacterDataCard from '../components/characterDataCard.jsx';
+import ShipTopBar from '../components/commonComponents/shipTopBar.jsx';
+import ShipAbilityScoresCard from '../components/commonComponents/shipAbilityScoresCard.jsx';
+import HelmCard from '../components/commonComponents/helmCard.jsx';
+import SailsCard from '../components/commonComponents/sailsCard.jsx';
+import HullCard from '../components/commonComponents/hullCard.jsx';
+import DefensesConditionsCard from '../components/commonComponents/defensesConditionsCard.jsx';
+import ShipSavingThrowsCard from '../components/commonComponents/shipSavingThrowsCard.jsx';
+import CrewCard from '../components/commonComponents/crewCard.jsx';
+import ShipDeploymentDashboard from '../components/commonComponents/shipDeploymentDashboard.jsx';
+import CommandDiceCard from '../components/commonComponents/commandDiceCard.jsx';
+import HullDiceCard from '../components/commonComponents/hullDiceCard.jsx';
+import CharacterDataCard from '../components/commonComponents/characterDataCard.jsx';
 
 
 const ShipDashboard = () => {

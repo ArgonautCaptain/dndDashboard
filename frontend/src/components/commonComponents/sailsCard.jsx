@@ -1,7 +1,7 @@
 import CircularProgress from '@mui/material/CircularProgress';
 import { Box } from '@mui/material';
-import getProgressColor from '../utils/getProgressColor.js';
-import calculatedSpeed from '../utils/calculatedSpeed.js';
+import getProgressColor from '../../utils/getProgressColor.js';
+import calculatedSpeed from '../../utils/calculatedSpeed.js';
 
 const SailsCard = (shipData) => {
   // Helper function to calculate dynamic color

@@ -1,5 +1,5 @@
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import removeOrder from "./removeOrder";
 
 const addOrder = async (shipData, orders, setOrders, action, weaponType, weaponTypeGroup, locationString, deck, side, weaponIndex) => {
@@ -59,6 +59,7 @@ const addOrder = async (shipData, orders, setOrders, action, weaponType, weaponT
       alert("You have no actions remaining this turn!");
     }
   } else if (isDuplicateOrder) {
+    /* console.log(orders); */
     const orderIndex = orders.findIndex(
       (order) =>
         order.action === newOrder.action &&
@@ -66,7 +67,8 @@ const addOrder = async (shipData, orders, setOrders, action, weaponType, weaponT
         order.locationString === newOrder.locationString &&
         order.weaponIndex === newOrder.weaponIndex
     );
-    removeOrder(orderIndex);
+    /* console.log(orders); */
+    removeOrder(shipData, orderIndex, orders, setOrders);
   } else if (alreadyHasOrders) {
     alert("This weapon already has orders submitted this turn!");
   }

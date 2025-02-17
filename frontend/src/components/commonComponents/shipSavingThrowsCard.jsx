@@ -1,5 +1,5 @@
-import calculateModifier from '../utils/calculateModifier.js';
-import TSAbilityRollSpan from './tsAbilityRollSpan.jsx';
+import calculateModifier from '../../utils/calculateModifier.js';
+import TSAbilityRollSpan from '../talespireComponents/tsAbilityRollSpan.jsx';
 
 const ShipSavingThrowsCard = (shipData) => {
   return (

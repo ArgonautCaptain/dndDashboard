@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
-import getProgressColor from '../utils/getProgressColor.js';
+import getProgressColor from '../../utils/getProgressColor.js';
 
 const HullCard = (shipData) => {
   const getTextColor = (currentHP, maxHP) => {

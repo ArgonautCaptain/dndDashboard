@@ -1,5 +1,5 @@
 import { doc, updateDoc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 
 const removeOrder = async (shipData, index, orders, setOrders) => {
   const currentLocationString = orders[index].locationString;
@@ -7,7 +7,7 @@ const removeOrder = async (shipData, index, orders, setOrders) => {
   const deck = currentLocationString.split(" ")[0].toLowerCase() + "Deck";
   const side = currentLocationString.split(" ")[2].toLowerCase() + "Side";
   const weaponIndex = orders[index].weaponIndex;
-  const weaponsActionsRemaining = shipData.weapons.gunnerOrders.actionsRemaining;
+  const weaponsActionsRemaining = shipData.gunnerOrders.actionsRemaining;
 
   setOrders((prevOrders) => prevOrders.filter((_, i) => i !== index));
   try {

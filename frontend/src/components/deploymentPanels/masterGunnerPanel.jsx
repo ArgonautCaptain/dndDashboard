@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import { keyframes } from "@mui/system";
 import { Button } from "@mui/material";
 import { doc, runTransaction, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import removeOrder from "../utils/removeOrder.js";
-import executeOrders from "../utils/executeOrders.js";
-import BallistaWeaponStats from "./ballistaeWeaponStats.jsx";
-import CannonWeaponStats from "./cannonWeaponStats.jsx";
-import RenderWeapons from "./renderWeapons.jsx";
+import { db } from "../../firebase.js";
+import removeOrder from "../../utils/orderManagement/removeOrder.js";
+import executeOrders from "../../utils/orderManagement/executeOrders.js";
+import BallistaWeaponStats from "../weaponComponents/ballistaeWeaponStats.jsx";
+import CannonWeaponStats from "../weaponComponents/cannonWeaponStats.jsx";
+import RenderWeapons from "../weaponComponents/renderWeapons.jsx";
 
 
 //TODO: Allow other roles to use their action to assist with Weapons, giving the Master Gunner an additional Weapon Action for that turn
@@ -64,7 +64,9 @@ const MasterGunnerPanel = ({ shipData, activeRole, activeRoleTab }) => {
 
     return (
       <div className="master-gunner-orders-panel">
-        <div className="gunner-actions"><strong>Actions Remaining This Turn: </strong>{weaponsActionsRemaining}{" / "}{weaponsActionsPerTurn}</div>
+        <div className="gunner-actions"><strong>Gunner Actions Remaining This Turn: </strong>{weaponsActionsRemaining}{" / "}{weaponsActionsPerTurn}</div>
+        <br />
+        <h4>Orders:</h4>
         <ul>
           {orders.map((order, index) => (
             <li key={index}>
@@ -73,6 +75,9 @@ const MasterGunnerPanel = ({ shipData, activeRole, activeRoleTab }) => {
             </li>
           ))}
         </ul>
+        {orders.length === 0 && (
+          <div style={{ color:"grey" }}>No orders.</div>
+        )}
         <button className="gunner-orders-button" onClick={() => { executeOrders(shipData, orders, setOrders) }} disabled={orders.length === 0}>
           Give the Order!
         </button>

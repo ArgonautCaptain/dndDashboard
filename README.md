@@ -20,8 +20,6 @@ This project demonstrates:
 - Real-time DM override systems  
 - Firebase-authenticated control panel (optional)  
 
-A larger professional project (*Kizu Web Platform*) cannot be made public due to contract restrictions, but code can be reviewed privately in interview upon request.
-
 ---
 
 ## 🌐 Live Demo

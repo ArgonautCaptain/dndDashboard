@@ -2,14 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { useShipData } from '../data/shipData';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, getDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
-import { db } from '../firebase';
-import { keyframes } from "@mui/system";
+import { db, auth } from '../firebase';
+import { keyframes } from '@mui/system';
 import { Button } from '@mui/material';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+
 
 const AdminPanel = () => {
   const { shipData, setShipData } = useShipData();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [selectedStat, setSelectedStat] = useState(null);
@@ -36,13 +41,13 @@ const AdminPanel = () => {
   const [incomingDamageDirection, setIncomingDamageDirection] = useState("");
   const [attackRequestModalOpen, setAttackRequestModalOpen] = useState(false);
 
-  const correctPassword = 'KeithBaker';
-
   useEffect(() => {
-    const savedAuth = localStorage.getItem('isAuthenticated');
-    if (savedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Redirect to Ship Dashboard if shipData is not available
@@ -52,20 +57,27 @@ const AdminPanel = () => {
     }
   }, [shipData, navigate]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (password === correctPassword) {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-    } else {
-      alert('Incorrect password!');
+    setAuthError('');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged will flip isAuthenticated to true
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setAuthError('Invalid email or password.');
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
+
 
   //useEffect to auto-focus inputs when opened
   //TODO: Add condition for booleans to not cause an error so that selectedEquippedWeaponStatus can be added to this useEffect
@@ -1946,15 +1958,26 @@ const AdminPanel = () => {
     <>
       {shipData &&
         <div className="admin-panel">
-          {!isAuthenticated ? (
-            <form onSubmit={handleLogin}>
+          {authLoading ? (
+            <p>Checking authentication…</p>
+          ) : !isAuthenticated ? (
+            <form onSubmit={handleLogin} className="dm-login-form">
               <h2>DM Login</h2>
+              <input
+                type="email"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
               <input
                 type="password"
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
+              {authError && <p className="auth-error">{authError}</p>}
               <button type="submit">Login</button>
             </form>
           ) : (
@@ -1966,11 +1989,16 @@ const AdminPanel = () => {
                   {endTurn()}
                 </div>
                 <div className="admin-header-buttons-right">
-                  <button className="firebase-button" onClick={() => window.open("https://console.firebase.google.com/u/0/project/dnd-dashboard-64a3c/firestore/databases/-default-/data/~2Fships~2Fscarlet-fury", '_blank')}>
-                    {"🔥 Firebase"}
+                  <button
+                    className="firebase-button"
+                    onClick={() =>
+                      window.open('https://console.firebase.google.com', '_blank')
+                    }
+                  >
+                    {'🔥 Firebase'}
                   </button>
                   <button className="logout-button" onClick={handleLogout}>
-                    {"🚪 Logout"}
+                    {'🚪 Logout'}
                   </button>
                 </div>
               </div>

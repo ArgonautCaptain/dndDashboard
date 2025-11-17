@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+} from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,9 +15,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Firestore instance
 export const db = getFirestore(app);
+
+// Auth instance
+export const auth = getAuth(app);
+
+// Optional: ensure auth persists in this browser
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.error('Error setting auth persistence', err);
+});

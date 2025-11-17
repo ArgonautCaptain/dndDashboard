@@ -3,13 +3,14 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDXC7BKn4yKFsXSYYzfeSeAMjZtqnM-lro",
-    authDomain: "dnd-dashboard-64a3c.firebaseapp.com",
-    projectId: "dnd-dashboard-64a3c",
-    storageBucket: "dnd-dashboard-64a3c.firebasestorage.app",
-    messagingSenderId: "611313030995",
-    appId: "1:611313030995:web:615752c86aee9e40c673a6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

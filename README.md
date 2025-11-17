@@ -56,7 +56,7 @@ A larger professional project (*Kizu Web Platform*) cannot be made public due to
 - Hull AC & threshold  
 - Dynamic hull section HP visualization
 
-<img src="./screenshots/dashboard-2.png" width="800"/>
+<img src="./screenshots/damage-panel.png" width="800"/>
 
 ---
 
@@ -96,7 +96,7 @@ Tracks:
 - DM approval flow
 
 ### Pending Orders Modal
-<img src="./screenshots/orders.png" width="800"/>
+<img src="./screenshots/dm-attack-orders.png" width="800"/>
 
 ### Approved Attacks
 <img src="./screenshots/attacks.png" width="800"/>
@@ -127,6 +127,9 @@ DM can:
 - Save/load game state via JSON  
 - Trigger combat events  
 
+### DM Panel
+<img src="./screenshots/dm-panel.png" width="800"/>
+
 ---
 
 ## 🧠 6. UI/UX Built for Fast Decision-Making
@@ -139,13 +142,5 @@ DM can:
 - Responsive design  
 
 ---
-
-# 📸 Screenshots
-
-![Dashboard Damage Panel](./screenshots/damage-panel.png)
-![Weapons Panel](./screenshots/weapons-panel.png)
-![DM Panel](./screenshots/dm-panel.png)
-![DM Attack Orders](./screenshots/dm-attack-orders.png)
-![Attacks](./screenshots/attacks.png)
 
 
